@@ -441,7 +441,7 @@ const DepthCarousel = forwardRef<DepthCarouselRef, DepthCarouselProps>(({
             )}
             <span
               className="depth-carousel__tint"
-              ref={el => (overlayRefs.current[i] = el)}
+              ref={(el) => { overlayRefs.current[i] = el; }}
               style={{ background: tint }}
             />
           </div>
