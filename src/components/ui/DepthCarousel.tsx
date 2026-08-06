@@ -425,7 +425,7 @@ const DepthCarousel = forwardRef<DepthCarouselRef, DepthCarouselProps>(({
           <div
             key={i}
             className="depth-carousel__card"
-            ref={el => (cardRefs.current[i] = el)}
+            ref={(el) => { cardRefs.current[i] = el; }}
             style={{ width: cardWidth, height: cardHeight, borderRadius: radius }}
             aria-roledescription="slide"
             aria-label={`${i + 1} of ${count}`}
