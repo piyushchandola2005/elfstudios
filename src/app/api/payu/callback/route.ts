@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { verifyHash } from "@/lib/payu";
+import { sendBookingConfirmation } from "@/lib/mail";
 
 export async function POST(req: Request) {
   try {
@@ -23,10 +24,17 @@ export async function POST(req: Request) {
 
     // Hash is valid, update database
     if (status === "success") {
-      await prisma.booking.update({
+      const confirmedBooking = await prisma.booking.update({
         where: { payuTxnId: txnid },
         data: { status: "CONFIRMED" },
+        include: { user: true } // Include user to get email address
       });
+      
+      // Send confirmation emails in the background
+      if (confirmedBooking.user?.email) {
+        sendBookingConfirmation(confirmedBooking, confirmedBooking.user.email).catch(console.error);
+      }
+      
       return NextResponse.redirect(`${process.env.NEXTAUTH_URL}/booking/success?txnid=${txnid}`);
     } else {
       await prisma.booking.update({

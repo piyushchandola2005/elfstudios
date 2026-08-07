@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { generateHash, PAYU_MERCHANT_KEY, PAYU_URL } from "@/lib/payu";
 import { randomBytes } from "crypto";
 import { createClient } from "@/utils/supabase/server";
+import { sendBookingConfirmation } from "@/lib/mail";
 
 export async function POST(req: Request) {
   try {
@@ -62,10 +63,16 @@ export async function POST(req: Request) {
     
     if (isDevStub) {
       // Mark as confirmed immediately
-      await prisma.booking.update({
+      const confirmedBooking = await prisma.booking.update({
         where: { id: booking.id },
-        data: { status: "CONFIRMED" }
+        data: { status: "CONFIRMED" },
+        include: { user: true }
       });
+      
+      if (confirmedBooking.user?.email) {
+        // Await the email here just to be sure it finishes before dev redirect, but catch errors
+        await sendBookingConfirmation(confirmedBooking, confirmedBooking.user.email).catch(console.error);
+      }
       
       // Return empty params to trigger frontend redirect bypass
       return NextResponse.json({
