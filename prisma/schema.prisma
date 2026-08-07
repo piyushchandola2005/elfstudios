@@ -75,6 +75,7 @@ model Booking {
   slots            String[] // Array of slot IDs (e.g. ["10", "11"])
   equipmentRequests String?
   ticketNumber     String?  @unique
+  bandName         String?
   
   totalAmount      Float
   

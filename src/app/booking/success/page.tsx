@@ -17,13 +17,14 @@ export default async function SuccessPage({
       select: { 
         ticketNumber: true,
         date: true,
+        bandName: true,
         user: {
           select: { bandName: true, name: true }
         }
       }
     });
     ticketNumber = booking?.ticketNumber;
-    bandName = booking?.user?.bandName || booking?.user?.name || "Musician";
+    bandName = booking?.bandName || booking?.user?.bandName || booking?.user?.name || "Musician";
     date = booking?.date;
   }
 

@@ -47,6 +47,7 @@ export async function POST(req: Request) {
         slots,
         equipmentRequests,
         ticketNumber,
+        bandName,
         totalAmount,
         status: "PENDING",
         payuTxnId: txnid,

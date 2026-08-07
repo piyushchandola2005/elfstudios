@@ -57,7 +57,7 @@ export function Step2DateTime({
         const newBookedSlots: Record<string, string> = {};
         data.bookings.forEach((booking: any) => {
           booking.slots.forEach((slotId: string) => {
-            newBookedSlots[slotId] = booking.user?.bandName || "Booked";
+            newBookedSlots[slotId] = booking.bandName || booking.user?.bandName || "Booked";
           });
         });
         
