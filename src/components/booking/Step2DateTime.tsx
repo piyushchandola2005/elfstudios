@@ -39,8 +39,9 @@ export function Step2DateTime({
   const [bookedSlots, setBookedSlots] = useState<Record<string, string>>({}); // slotId -> bandName
   const [isLoading, setIsLoading] = useState(false);
 
-  // Default to today if date is null, but don't set it in parent state immediately
-  const activeDate = date || startOfDay(new Date());
+  // Stable reference for today's date to prevent infinite useEffect loops
+  const today = useMemo(() => startOfDay(new Date()), []);
+  const activeDate = date || today;
 
   useEffect(() => {
     async function fetchBookings() {
@@ -124,8 +125,6 @@ export function Step2DateTime({
   const dateFormat = "d";
   const days = eachDayOfInterval({ start: startDate, end: endDate });
   const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-
-  const today = startOfDay(new Date());
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
