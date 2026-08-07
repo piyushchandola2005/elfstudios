@@ -45,6 +45,7 @@ export function Step2DateTime({
   useEffect(() => {
     async function fetchBookings() {
       setIsLoading(true);
+      setBookedSlots({}); // Instantly clear previous date's slots while fetching new ones
       try {
         const dateStr = activeDate.toISOString();
         const res = await fetch(`/api/bookings?date=${dateStr}`);
@@ -212,11 +213,13 @@ export function Step2DateTime({
             {timeSlots.map((slot) => (
               <div
                 key={slot.id}
-                onClick={() => slot.status === "AVAILABLE" && toggleSlot(slot.id)}
+                onClick={() => !isLoading && slot.status === "AVAILABLE" && toggleSlot(slot.id)}
                 className={`py-3 px-2 rounded-xl flex flex-col items-center justify-center cursor-pointer transition-all duration-200 border backdrop-blur-sm relative overflow-hidden
                   ${
                     slot.status === "BOOKED"
                       ? "border-red-500/20 bg-red-500/10 cursor-not-allowed opacity-80"
+                      : isLoading
+                      ? "border-white/5 bg-white/5 opacity-50 cursor-wait"
                       : selectedSlots.includes(slot.id)
                       ? "border-white bg-white text-black shadow-sm scale-[0.98]"
                       : "border-white/10 hover:border-white/50 bg-white/5 text-white hover:bg-white/10 shadow-sm"
