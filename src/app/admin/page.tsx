@@ -30,8 +30,7 @@ export default async function AdminDashboard() {
       status: "CONFIRMED"
     },
     orderBy: [
-      { date: "asc" },
-      { startTime: "asc" }
+      { date: "asc" }
     ],
     take: 5,
     include: {
@@ -85,27 +84,36 @@ export default async function AdminDashboard() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {upcomingBookings.map((booking) => (
-                  <tr key={booking.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="font-bold text-black">{format(new Date(booking.date), "EEE, MMM do")}</div>
-                      <div className="text-gray-500">
-                        {format(new Date(booking.startTime), "h:mm a")} - {format(new Date(booking.endTime), "h:mm a")}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="font-bold text-black">{booking.user.bandName || "Unknown Band"}</div>
-                      <div className="text-gray-500 text-xs">{booking.user.name || booking.user.email}</div>
-                      <div className="text-gray-400 text-xs">{booking.user.phone}</div>
-                    </td>
-                    <td className="px-6 py-4">
-                      {booking.attendees}
-                    </td>
-                    <td className="px-6 py-4 font-mono">
-                      ₹{booking.totalAmount}
-                    </td>
-                  </tr>
-                ))}
+                {upcomingBookings.map((booking) => {
+                  const formattedSlots = booking.slots.map(s => {
+                    const i = parseInt(s);
+                    const ampm1 = i >= 12 ? "PM" : "AM";
+                    const hour1 = i > 12 ? i - 12 : i;
+                    return `${hour1} ${ampm1}`;
+                  }).join(", ");
+
+                  return (
+                    <tr key={booking.id} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="font-bold text-black">{format(new Date(booking.date), "EEE, MMM do")}</div>
+                        <div className="text-gray-500 text-xs mt-1" title={formattedSlots}>
+                          Slots: {formattedSlots.length > 25 ? formattedSlots.substring(0, 25) + "..." : formattedSlots}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="font-bold text-black">{booking.user.bandName || "Unknown Band"}</div>
+                        <div className="text-gray-500 text-xs">{booking.user.name || booking.user.email}</div>
+                        <div className="text-gray-400 text-xs">{booking.user.phone}</div>
+                      </td>
+                      <td className="px-6 py-4">
+                        {booking.attendees}
+                      </td>
+                      <td className="px-6 py-4 font-mono">
+                        ₹{booking.totalAmount}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

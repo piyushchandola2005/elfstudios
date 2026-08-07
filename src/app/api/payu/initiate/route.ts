@@ -14,9 +14,9 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const { attendees, bandName, phone, date, startTime, endTime, totalAmount } = body;
+    const { attendees, bandName, phone, date, slots, equipmentRequests, ticketNumber, totalAmount } = body;
 
-    if (!totalAmount || !attendees) {
+    if (!totalAmount || !attendees || !date || !slots || slots.length === 0) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
@@ -43,14 +43,35 @@ export async function POST(req: Request) {
       data: {
         userId: user.id,
         attendees,
-        date: new Date(date || new Date()), // Replace with actual date logic
-        startTime: new Date(startTime || new Date()), // Replace with actual logic
-        endTime: new Date(endTime || new Date()), // Replace with actual logic
+        date: new Date(date),
+        slots,
+        equipmentRequests,
+        ticketNumber,
         totalAmount,
         status: "PENDING",
         payuTxnId: txnid,
       },
     });
+
+    // ==========================================
+    // DEV STUB: Skip PayU completely and confirm booking
+    // Set to false when moving to production
+    // ==========================================
+    const isDevStub = true; 
+    
+    if (isDevStub) {
+      // Mark as confirmed immediately
+      await prisma.booking.update({
+        where: { id: booking.id },
+        data: { status: "CONFIRMED" }
+      });
+      
+      // Return empty params to trigger frontend redirect bypass
+      return NextResponse.json({
+        url: `/booking/success?txnid=${txnid}`,
+        params: {}
+      });
+    }
 
     // Prepare PayU Form Data
     const payuData = {

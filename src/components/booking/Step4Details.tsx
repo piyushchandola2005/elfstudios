@@ -7,9 +7,13 @@ import { User } from "@supabase/supabase-js";
 interface Step4Props {
   onNext: () => void;
   onBack: () => void;
+  bandName: string;
+  setBandName: (val: string) => void;
+  equipmentRequests: string;
+  setEquipmentRequests: (val: string) => void;
 }
 
-export function Step4Details({ onNext, onBack }: Step4Props) {
+export function Step4Details({ onNext, onBack, bandName, setBandName, equipmentRequests, setEquipmentRequests }: Step4Props) {
   const [user, setUser] = useState<User | null>(null);
   const supabase = createClient();
 
@@ -19,12 +23,9 @@ export function Step4Details({ onNext, onBack }: Step4Props) {
     });
   }, [supabase.auth]);
 
-  const [details, setDetails] = useState({ bandName: "", equipmentRequests: "" });
-  
-  // In a real implementation, we'd fetch the DB user profile and pre-populate
-  // these state variables if they already exist in the user's profile.
+  // Optionally prefill bandName from user profile in a real app if empty.
 
-  const isFormValid = details.bandName.trim().length > 0;
+  const isFormValid = bandName.trim().length > 0;
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -49,8 +50,8 @@ export function Step4Details({ onNext, onBack }: Step4Props) {
             id="bandName"
             type="text"
             required
-            value={details.bandName}
-            onChange={(e) => setDetails({ ...details, bandName: e.target.value })}
+            value={bandName}
+            onChange={(e) => setBandName(e.target.value)}
             placeholder="e.g. The Local Train"
             className="w-full h-[50px] bg-white/5 border border-white/10 rounded-xl px-4 text-white focus:outline-none focus:border-white focus:ring-1 focus:ring-white/50 transition-all font-sans text-[15px] shadow-sm backdrop-blur-sm"
           />
@@ -62,8 +63,8 @@ export function Step4Details({ onNext, onBack }: Step4Props) {
           </label>
           <textarea
             id="equipment"
-            value={details.equipmentRequests}
-            onChange={(e) => setDetails({ ...details, equipmentRequests: e.target.value })}
+            value={equipmentRequests}
+            onChange={(e) => setEquipmentRequests(e.target.value)}
             placeholder="Need an extra mic stand or specific cymbal?"
             className="w-full min-h-[100px] bg-white/5 border border-white/10 rounded-xl p-4 text-white focus:outline-none focus:border-white focus:ring-1 focus:ring-white/50 transition-all font-sans text-[15px] shadow-sm resize-none backdrop-blur-sm"
           />
@@ -79,7 +80,7 @@ export function Step4Details({ onNext, onBack }: Step4Props) {
         </button>
         <button 
           onClick={onNext} 
-          disabled={!details.bandName.trim()} 
+          disabled={!isFormValid} 
           className="flex-1 h-[50px] bg-white text-black hover:bg-white/90 font-bold tracking-widest uppercase transition-all rounded-xl text-xs shadow-sm transform hover:-translate-y-0.5 disabled:opacity-50 disabled:hover:translate-y-0"
         >
           Review Booking

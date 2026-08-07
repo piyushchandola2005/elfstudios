@@ -17,9 +17,6 @@ export default async function AdminCalendarPage() {
     },
     include: {
       user: true
-    },
-    orderBy: {
-      startTime: "asc"
     }
   });
 
@@ -57,19 +54,28 @@ export default async function AdminCalendarPage() {
                     No bookings
                   </div>
                 ) : (
-                  dayBookings.map(booking => (
-                    <div key={booking.id} className="bg-white p-3 rounded-xl border border-gray-200 shadow-sm hover:border-elf-orange transition-colors">
-                      <div className="text-xs font-mono font-bold text-black">
-                        {format(new Date(booking.startTime), "HH:mm")} - {format(new Date(booking.endTime), "HH:mm")}
+                  dayBookings.map(booking => {
+                    const formattedSlots = booking.slots.map(s => {
+                      const i = parseInt(s);
+                      const ampm1 = i >= 12 ? "PM" : "AM";
+                      const hour1 = i > 12 ? i - 12 : i;
+                      return `${hour1} ${ampm1}`;
+                    }).join(", ");
+
+                    return (
+                      <div key={booking.id} className="bg-white p-3 rounded-xl border border-gray-200 shadow-sm hover:border-elf-orange transition-colors">
+                        <div className="text-[10px] font-mono font-bold text-black" title={formattedSlots}>
+                          {formattedSlots}
+                        </div>
+                        <div className="text-sm font-sans font-bold text-elf-orange mt-1 truncate">
+                          {booking.user.bandName || booking.user.name || "Unknown Band"}
+                        </div>
+                        <div className="text-[10px] font-sans text-gray-500 mt-1">
+                          {booking.user.phone}
+                        </div>
                       </div>
-                      <div className="text-sm font-sans font-bold text-elf-orange mt-1 truncate">
-                        {booking.user.bandName || booking.user.name || "Unknown Band"}
-                      </div>
-                      <div className="text-[10px] font-sans text-gray-500 mt-1">
-                        {booking.user.phone}
-                      </div>
-                    </div>
-                  ))
+                    );
+                  })
                 )}
               </div>
             </div>

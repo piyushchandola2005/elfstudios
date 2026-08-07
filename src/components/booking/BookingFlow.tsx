@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Step1AttendeeCount } from "./Step1AttendeeCount";
 import { Step2DateTime } from "./Step2DateTime";
 import { Step4Details } from "./Step4Details";
@@ -11,6 +11,31 @@ export function BookingFlow() {
   const [step, setStep] = useState(1);
   const [attendees, setAttendees] = useState(5);
   const [hours, setHours] = useState(1);
+  
+  const [date, setDate] = useState<Date | null>(null);
+  const [selectedSlots, setSelectedSlots] = useState<string[]>([]);
+  const [bandName, setBandName] = useState("");
+  const [equipmentRequests, setEquipmentRequests] = useState("");
+  const [ticketNumber, setTicketNumber] = useState("TK-...");
+
+  useEffect(() => {
+    async function fetchTicketNumber() {
+      try {
+        const res = await fetch("/api/generate-ticket");
+        if (res.ok) {
+          const data = await res.json();
+          setTicketNumber(data.ticketNumber);
+        }
+      } catch (error) {
+        console.error("Failed to generate ticket number", error);
+        // Fallback
+        const letter = String.fromCharCode(65 + Math.floor(Math.random() * 26));
+        const digits = String(Math.floor(Math.random() * 100000)).padStart(5, "0");
+        setTicketNumber(`${letter}-${digits}`);
+      }
+    }
+    fetchTicketNumber();
+  }, []);
   
   const handleNext = () => setStep((s) => Math.min(s + 1, 4));
   const handleBack = () => setStep((s) => Math.max(s - 1, 1));
@@ -80,18 +105,38 @@ export function BookingFlow() {
             {/* Modal Scrollable Content Wrapper */}
             <div className={`flex-1 w-full min-h-0 overflow-y-auto custom-scrollbar text-sm pb-4 px-2 ${step !== 2 ? 'max-w-xl mx-auto' : ''}`}>
               {step === 2 && (
-                <Step2DateTime onNext={handleNext} onBack={handleBack} setHours={setHours} />
+                <Step2DateTime 
+                  onNext={handleNext} 
+                  onBack={handleBack} 
+                  setHours={setHours} 
+                  date={date}
+                  setDate={setDate}
+                  selectedSlots={selectedSlots}
+                  setSelectedSlots={setSelectedSlots}
+                />
               )}
 
               {step === 3 && (
-                <Step4Details onNext={handleNext} onBack={handleBack} />
+                <Step4Details 
+                  onNext={handleNext} 
+                  onBack={handleBack} 
+                  bandName={bandName}
+                  setBandName={setBandName}
+                  equipmentRequests={equipmentRequests}
+                  setEquipmentRequests={setEquipmentRequests}
+                />
               )}
               
               {step === 4 && (
                 <Step5Summary 
                   attendees={attendees} 
                   hours={hours}
-                  onNext={() => alert("Redirecting to PayU gateway...")} 
+                  date={date}
+                  slots={selectedSlots}
+                  bandName={bandName}
+                  equipmentRequests={equipmentRequests}
+                  ticketNumber={ticketNumber}
+                  onNext={() => {}} // Will be handled inside Step5Summary
                   onBack={handleBack} 
                   onCancel={() => window.location.href = "https://www.elfstudios.in/elf-jampad"} 
                 />

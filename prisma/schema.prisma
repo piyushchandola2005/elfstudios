@@ -66,20 +66,21 @@ model VerificationToken {
 
 // App models
 model Booking {
-  id             String   @id @default(cuid())
-  userId         String
-  user           User     @relation(fields: [userId], references: [id])
+  id               String   @id @default(cuid())
+  userId           String
+  user             User     @relation(fields: [userId], references: [id])
   
-  attendees      Int
-  date           DateTime // The date of the jam session
-  startTime      DateTime // Start time
-  endTime        DateTime // End time
+  attendees        Int
+  date             DateTime // The date of the jam session
+  slots            String[] // Array of slot IDs (e.g. ["10", "11"])
+  equipmentRequests String?
+  ticketNumber     String?  @unique
   
-  totalAmount    Float
+  totalAmount      Float
   
-  status         String   @default("PENDING") // PENDING, CONFIRMED, CANCELLED
-  payuTxnId      String?  @unique // To store PayU transaction ID after success
+  status           String   @default("PENDING") // PENDING, CONFIRMED, CANCELLED
+  payuTxnId        String?  @unique // To store PayU transaction ID after success
   
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 }

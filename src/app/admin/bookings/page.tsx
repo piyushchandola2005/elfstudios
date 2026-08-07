@@ -5,8 +5,7 @@ import { format } from "date-fns";
 export default async function AdminBookingsPage() {
   const bookings = await prisma.booking.findMany({
     orderBy: [
-      { date: "desc" },
-      { startTime: "desc" }
+      { date: "desc" }
     ],
     include: {
       user: true
@@ -43,36 +42,46 @@ export default async function AdminBookingsPage() {
                 </td>
               </tr>
             ) : (
-              bookings.map((booking) => (
-                <tr key={booking.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="font-bold text-black">{format(new Date(booking.date), "EEE, MMM do yyyy")}</div>
-                    <div className="text-gray-500">
-                      {format(new Date(booking.startTime), "h:mm a")} - {format(new Date(booking.endTime), "h:mm a")}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="font-bold text-black">{booking.user.bandName || "Unknown Band"}</div>
-                    <div className="text-gray-500 text-xs">{booking.user.name || booking.user.email}</div>
-                    <div className="text-gray-400 text-xs">{booking.user.phone}</div>
-                  </td>
-                  <td className="px-6 py-4">
-                    {booking.attendees}
-                  </td>
-                  <td className="px-6 py-4 font-mono">
-                    ₹{booking.totalAmount}
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className={`px-2 py-1 text-[10px] font-mono uppercase tracking-widest rounded-full ${
-                      booking.status === "CONFIRMED" ? "bg-green-100 text-green-700" :
-                      booking.status === "CANCELLED" ? "bg-red-100 text-red-700" :
-                      "bg-yellow-100 text-yellow-700"
-                    }`}>
-                      {booking.status}
-                    </span>
-                  </td>
-                </tr>
-              ))
+              bookings.map((booking) => {
+                const formattedSlots = booking.slots.map(s => {
+                  const i = parseInt(s);
+                  const ampm1 = i >= 12 ? "PM" : "AM";
+                  const hour1 = i > 12 ? i - 12 : i;
+                  return `${hour1} ${ampm1}`;
+                }).join(", ");
+                
+                return (
+                  <tr key={booking.id} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="font-bold text-black">{format(new Date(booking.date), "EEE, MMM do yyyy")}</div>
+                      <div className="text-gray-500 max-w-[200px] truncate" title={formattedSlots}>
+                        Slots: {formattedSlots}
+                      </div>
+                      <div className="text-xs text-gray-400 mt-1">Ticket: {booking.ticketNumber || "N/A"}</div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="font-bold text-black">{booking.user.bandName || "Unknown Band"}</div>
+                      <div className="text-gray-500 text-xs">{booking.user.name || booking.user.email}</div>
+                      <div className="text-gray-400 text-xs">{booking.user.phone}</div>
+                    </td>
+                    <td className="px-6 py-4">
+                      {booking.attendees}
+                    </td>
+                    <td className="px-6 py-4 font-mono">
+                      ₹{booking.totalAmount}
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className={`px-2 py-1 text-[10px] font-mono uppercase tracking-widest rounded-full ${
+                        booking.status === "CONFIRMED" ? "bg-green-100 text-green-700" :
+                        booking.status === "CANCELLED" ? "bg-red-100 text-red-700" :
+                        "bg-yellow-100 text-yellow-700"
+                      }`}>
+                        {booking.status}
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })
             )}
           </tbody>
         </table>

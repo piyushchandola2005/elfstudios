@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { 
   format, 
   addMonths, 
@@ -20,12 +20,55 @@ interface Step2Props {
   onNext: () => void;
   onBack: () => void;
   setHours: (hours: number) => void;
+  date: Date | null;
+  setDate: (date: Date) => void;
+  selectedSlots: string[];
+  setSelectedSlots: (slots: string[]) => void;
 }
 
-export function Step2DateTime({ onNext, onBack, setHours }: Step2Props) {
-  const [currentMonth, setCurrentMonth] = useState<Date>(startOfDay(new Date()));
-  const [selectedDate, setSelectedDate] = useState<Date>(startOfDay(new Date()));
-  const [selectedSlots, setSelectedSlots] = useState<string[]>([]);
+export function Step2DateTime({ 
+  onNext, 
+  onBack, 
+  setHours, 
+  date, 
+  setDate, 
+  selectedSlots, 
+  setSelectedSlots 
+}: Step2Props) {
+  const [currentMonth, setCurrentMonth] = useState<Date>(date ? startOfMonth(date) : startOfMonth(new Date()));
+  const [bookedSlots, setBookedSlots] = useState<Record<string, string>>({}); // slotId -> bandName
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Default to today if date is null, but don't set it in parent state immediately
+  const activeDate = date || startOfDay(new Date());
+
+  useEffect(() => {
+    async function fetchBookings() {
+      setIsLoading(true);
+      try {
+        const dateStr = activeDate.toISOString();
+        const res = await fetch(`/api/bookings?date=${dateStr}`);
+        if (!res.ok) throw new Error("Failed to fetch bookings");
+        
+        const data = await res.json();
+        
+        const newBookedSlots: Record<string, string> = {};
+        data.bookings.forEach((booking: any) => {
+          booking.slots.forEach((slotId: string) => {
+            newBookedSlots[slotId] = booking.user?.bandName || "Booked";
+          });
+        });
+        
+        setBookedSlots(newBookedSlots);
+      } catch (err) {
+        console.error("Error fetching bookings:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    
+    fetchBookings();
+  }, [activeDate]);
 
   // Generate 12 slots from 10 AM to 10 PM
   const timeSlots = useMemo(() => {
@@ -36,26 +79,37 @@ export function Step2DateTime({ onNext, onBack, setHours }: Step2Props) {
       const hour1 = i > 12 ? i - 12 : i;
       const hour2 = (i + 1) > 12 ? (i + 1) - 12 : (i + 1);
       
+      const id = `${i}`;
+      const isBooked = !!bookedSlots[id];
+      
       slots.push({
-        id: `${i}`,
+        id,
         time: `${hour1}:00 ${ampm1} - ${hour2}:00 ${ampm2}`,
-        // Mock some random bookings
-        status: (i === 13 || i === 18) ? "BOOKED" : "AVAILABLE" 
+        status: isBooked ? "BOOKED" : "AVAILABLE",
+        bandName: bookedSlots[id]
       });
     }
     return slots;
-  }, [selectedDate]); // Re-compute mock slots if date changes for realism (though mocked)
+  }, [bookedSlots]); 
 
   const handlePrevMonth = () => setCurrentMonth(subMonths(currentMonth, 1));
   const handleNextMonth = () => setCurrentMonth(addMonths(currentMonth, 1));
 
   const toggleSlot = (id: string) => {
-    setSelectedSlots(prev => 
-      prev.includes(id) ? prev.filter(slot => slot !== id) : [...prev, id]
+    setSelectedSlots(
+      selectedSlots.includes(id) 
+        ? selectedSlots.filter(slot => slot !== id) 
+        : [...selectedSlots, id]
     );
   };
 
+  const handleDateSelect = (d: Date) => {
+    setDate(d);
+    setSelectedSlots([]); // Reset slots when date changes
+  };
+
   const handleContinue = () => {
+    if (!date) setDate(activeDate); // If they never clicked a date but just picked a slot for today
     setHours(selectedSlots.length);
     onNext();
   };
@@ -112,14 +166,14 @@ export function Step2DateTime({ onNext, onBack, setHours }: Step2Props) {
           
           <div className="grid grid-cols-7 gap-1">
             {days.map((day, idx) => {
-              const isSelected = isSameDay(day, selectedDate);
+              const isSelected = isSameDay(day, activeDate);
               const isPast = isBefore(day, today);
               const isCurrentMonth = isSameMonth(day, monthStart);
               
               return (
                 <button
                   key={idx}
-                  onClick={() => !isPast && setSelectedDate(day)}
+                  onClick={() => !isPast && handleDateSelect(day)}
                   disabled={isPast}
                   className={`
                     h-8 flex items-center justify-center rounded-lg text-[13px] font-sans transition-all
@@ -138,13 +192,20 @@ export function Step2DateTime({ onNext, onBack, setHours }: Step2Props) {
 
         {/* Slots Column */}
         <div className="flex-1">
-          <div className="mb-4">
-            <span className="font-mono text-[10px] uppercase tracking-widest text-white/50">
-              Available slots for
-            </span>
-            <div className="font-display text-lg text-white font-black uppercase">
-              {format(selectedDate, "EEEE, MMMM d")}
+          <div className="mb-4 flex items-center justify-between">
+            <div>
+              <span className="font-mono text-[10px] uppercase tracking-widest text-white/50 block">
+                Available slots for
+              </span>
+              <div className="font-display text-lg text-white font-black uppercase">
+                {format(activeDate, "EEEE, MMMM d")}
+              </div>
             </div>
+            {isLoading && (
+              <div className="text-[10px] font-mono uppercase tracking-widest text-white/50 animate-pulse">
+                Loading...
+              </div>
+            )}
           </div>
           
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-2">
@@ -152,21 +213,23 @@ export function Step2DateTime({ onNext, onBack, setHours }: Step2Props) {
               <div
                 key={slot.id}
                 onClick={() => slot.status === "AVAILABLE" && toggleSlot(slot.id)}
-                className={`py-3 px-2 rounded-xl flex flex-col items-center justify-center cursor-pointer transition-all duration-200 border backdrop-blur-sm
+                className={`py-3 px-2 rounded-xl flex flex-col items-center justify-center cursor-pointer transition-all duration-200 border backdrop-blur-sm relative overflow-hidden
                   ${
                     slot.status === "BOOKED"
-                      ? "border-white/5 bg-white/5 cursor-not-allowed opacity-40 text-white/30"
+                      ? "border-red-500/20 bg-red-500/10 cursor-not-allowed opacity-80"
                       : selectedSlots.includes(slot.id)
                       ? "border-white bg-white text-black shadow-sm scale-[0.98]"
                       : "border-white/10 hover:border-white/50 bg-white/5 text-white hover:bg-white/10 shadow-sm"
                   }
                 `}
               >
-                <span className="font-mono font-bold tracking-tight mb-1 text-[11px] whitespace-nowrap">{slot.time}</span>
+                <span className={`font-mono font-bold tracking-tight mb-1 text-[11px] whitespace-nowrap z-10 ${slot.status === "BOOKED" ? "text-white/50" : ""}`}>{slot.time}</span>
                 {slot.status === "BOOKED" ? (
-                  <span className="text-[9px] uppercase tracking-widest text-white/40">Booked</span>
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-red-400/90 z-10 text-center px-1">
+                    {slot.bandName || "Booked"}
+                  </span>
                 ) : (
-                  <span className={`text-[9px] uppercase tracking-widest ${selectedSlots.includes(slot.id) ? 'text-black/70' : 'text-white/60 font-bold'}`}>Available</span>
+                  <span className={`text-[9px] uppercase tracking-widest z-10 ${selectedSlots.includes(slot.id) ? 'text-black/70' : 'text-white/60 font-bold'}`}>Available</span>
                 )}
               </div>
             ))}
