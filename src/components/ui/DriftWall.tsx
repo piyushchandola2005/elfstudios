@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import Image from 'next/image';
 import './DriftWall.css';
 
 const DEFAULT_ITEMS = [
@@ -268,8 +269,15 @@ const DriftWall = ({
 
   const renderTile = (item: any, id: string, colIndex: number) => {
     const inner = (
-      <span className="drift-wall__inner">
-        <img src={item.image} alt={item.title ?? ''} loading="lazy" decoding="async" draggable={false} />
+      <span className="drift-wall__inner relative w-full h-full block">
+        <Image 
+          src={item.image} 
+          alt={item.title ?? ''} 
+          fill
+          sizes="(max-width: 768px) 140px, 320px"
+          draggable={false} 
+          className="object-cover transition-all duration-300"
+        />
         <span className="drift-wall__overlay" aria-hidden="true" />
       </span>
     );

@@ -245,10 +245,16 @@ export default function LoginPage() {
           {/* Right Side - Image Section */}
           <div className="relative lg:rounded-[2rem] m-0 lg:m-4 overflow-hidden hidden lg:block">
             {/* Background Image */}
-            <div
-              className="absolute inset-0 w-full h-full bg-cover bg-center"
-              style={{ backgroundImage: 'url("/assets/A7R09009.jpg")' }}
-            />
+            <div className="absolute inset-0 w-full h-full">
+              <Image 
+                src="/assets/A7R09009.jpg"
+                alt="Studio Background"
+                fill
+                priority
+                className="object-cover object-center"
+                sizes="(min-width: 1024px) 50vw, 100vw"
+              />
+            </div>
             
             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
 
