@@ -2,6 +2,8 @@ import React from "react";
 import { prisma } from "@/lib/prisma";
 import { format } from "date-fns";
 
+export const dynamic = 'force-dynamic';
+
 export default async function AdminBookingsPage() {
   const bookings = await prisma.booking.findMany({
     orderBy: [

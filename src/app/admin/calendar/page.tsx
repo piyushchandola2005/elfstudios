@@ -2,6 +2,8 @@ import React from "react";
 import { prisma } from "@/lib/prisma";
 import { format, addDays, startOfToday } from "date-fns";
 
+export const dynamic = 'force-dynamic';
+
 export default async function AdminCalendarPage() {
   const today = startOfToday();
   const next7Days = Array.from({ length: 7 }).map((_, i) => addDays(today, i));

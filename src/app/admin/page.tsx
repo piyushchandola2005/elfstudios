@@ -3,6 +3,8 @@ import { prisma } from "@/lib/prisma";
 import { Card } from "@/components/ui/Card";
 import { format } from "date-fns";
 
+export const dynamic = 'force-dynamic';
+
 export default async function AdminDashboard() {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
