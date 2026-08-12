@@ -1,40 +1,36 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { startOfDay, endOfDay, parseISO } from "date-fns";
+import { normalizeBookingDate } from "@/lib/booking-policy";
+
+export const dynamic = "force-dynamic";
 
 export async function GET(req: Request) {
-  const { searchParams } = new URL(req.url);
-  const dateStr = searchParams.get("date");
-  
-  if (!dateStr) {
-    return NextResponse.json({ error: "Date is required" }, { status: 400 });
-  }
+  const dateStr = new URL(req.url).searchParams.get("date");
+  if (!dateStr) return NextResponse.json({ error: "Date is required" }, { status: 400 });
 
   try {
-    const targetDate = parseISO(dateStr);
-    
-    const bookings = await prisma.booking.findMany({
-      where: {
-        date: {
-          gte: startOfDay(targetDate),
-          lte: endOfDay(targetDate)
-        },
-        status: {
-          in: ["PENDING", "CONFIRMED"] // Exclude CANCELLED
-        }
-      },
-      include: {
-        user: {
-          select: {
-            bandName: true
-          }
-        }
-      }
+    const targetDate = normalizeBookingDate(dateStr);
+    const now = new Date();
+    await prisma.booking.updateMany({
+      where: { status: "PENDING", expiresAt: { lt: now } },
+      data: { status: "CANCELLED", paymentStatus: "EXPIRED", cancelledAt: now, cancelledBy: "SYSTEM" },
     });
 
-    return NextResponse.json({ bookings });
+    const bookings = await prisma.booking.findMany({
+      where: {
+        date: targetDate,
+        OR: [
+          { status: "CONFIRMED" },
+          { status: "PENDING", expiresAt: { gt: now } },
+        ],
+      },
+      select: { id: true, slots: true, bandName: true },
+    });
+    return NextResponse.json({ bookings }, {
+      headers: { "Cache-Control": "no-store" },
+    });
   } catch (error) {
-    console.error("Error fetching bookings:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    const message = error instanceof Error ? error.message : "Unable to load bookings.";
+    return NextResponse.json({ error: message }, { status: 400 });
   }
 }

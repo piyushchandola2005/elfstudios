@@ -85,13 +85,19 @@ export default function BookPage() {
           <span className="group-hover:-translate-x-1 transition-transform">&lt;</span> Back
         </a>
         <div className="flex items-center gap-6">
+          <a
+            href="/my-bookings"
+            className="min-h-11 flex items-center text-[10px] font-mono text-white/70 hover:text-white uppercase tracking-widest transition-colors"
+          >
+            My Bookings
+          </a>
           <div className="flex items-center gap-4">
             <span className="font-mono text-[10px] text-gray-500 uppercase tracking-widest hidden sm:inline">
               {user.email?.split("@")[0]}
             </span>
             <button 
               onClick={handleLogout}
-              className="text-[10px] font-mono text-gray-400 hover:text-red-500 uppercase tracking-widest transition-colors"
+              className="min-h-11 text-[10px] font-mono text-gray-400 hover:text-red-500 uppercase tracking-widest transition-colors"
             >
               Logout
             </button>

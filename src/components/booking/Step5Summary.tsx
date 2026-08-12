@@ -28,7 +28,9 @@ export function Step5Summary({
 }: Step5Props) {
   const [loading, setLoading] = useState(false);
   const pricePerHour = attendees <= 5 ? 400 : 100 * attendees;
-  const total = pricePerHour * hours;
+  const subtotal = pricePerHour * hours;
+  const discount = hours >= 10 ? Math.round(subtotal * 0.1) : 0;
+  const total = subtotal - discount;
 
   const handlePayment = async () => {
     setLoading(true);
@@ -145,6 +147,7 @@ export function Step5Summary({
               <p className="font-mono text-[10px] text-white/40 mt-1 uppercase tracking-widest">₹{pricePerHour}/hr × {hours} hrs</p>
             </div>
           </div>
+          {discount > 0 && <p className="text-right font-mono text-[10px] uppercase tracking-widest text-green-400">10-hour discount: −₹{discount}</p>}
         </div>
       </div>
 
@@ -154,7 +157,7 @@ export function Step5Summary({
           disabled={loading}
           className="h-[50px] px-6 text-white/40 hover:text-red-400 font-bold tracking-widest uppercase transition-colors text-[11px]"
         >
-          Cancel
+          Exit
         </button>
         <div className="flex-1"></div>
         <button 

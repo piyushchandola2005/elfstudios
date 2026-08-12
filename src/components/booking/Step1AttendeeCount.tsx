@@ -1,6 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { Button } from "@/components/ui/Button";
-import { Input } from "@/components/ui/Input";
 
 interface Step1Props {
   attendees: number;
@@ -13,13 +11,15 @@ export function Step1AttendeeCount({
   setAttendees,
   onNext,
 }: Step1Props) {
-  const [price, setPrice] = useState(400);
+  const [price, setPrice] = useState(0);
 
   useEffect(() => {
     // Dynamic Pricing Logic:
     // <= 5 people: ₹400/hr flat
     // > 5 people: ₹100/hr * attendees
-    if (attendees <= 5) {
+    if (attendees < 1) {
+      setPrice(0);
+    } else if (attendees <= 5) {
       setPrice(400);
     } else {
       setPrice(100 * attendees);
@@ -33,7 +33,7 @@ export function Step1AttendeeCount({
           Step 1
         </h2>
         <h3 className="font-display font-medium text-xl md:text-2xl uppercase text-white/90 tracking-[0.15em]">
-          Who's Jamming?
+          Who’s Jamming?
         </h3>
         <p className="font-sans text-[12px] text-white/40 font-light tracking-wide pt-1">
           Enter the number of people attending the session. Pricing is calculated dynamically.
@@ -50,8 +50,8 @@ export function Step1AttendeeCount({
             type="number"
             min="1"
             max="20"
-            value={attendees}
-            onChange={(e) => setAttendees(parseInt(e.target.value) || 1)}
+            value={attendees || ""}
+            onChange={(e) => setAttendees(e.target.value === "" ? 0 : Math.min(20, Math.max(1, parseInt(e.target.value, 10) || 1)))}
             className="w-full h-[50px] bg-white/5 border border-white/10 rounded-xl px-4 text-white focus:outline-none focus:border-white focus:ring-1 focus:ring-white/50 transition-all font-sans text-[15px] shadow-sm backdrop-blur-sm"
           />
         </div>
@@ -61,20 +61,23 @@ export function Step1AttendeeCount({
         <div>
           <p className="font-mono text-[10px] uppercase text-white/40 tracking-widest">Live Rate</p>
           <p className="font-sans text-[11px] text-white/60 mt-1 font-light">
-            {attendees <= 5
+            {attendees < 1
+              ? "Enter your group size to see the rate."
+              : attendees <= 5
               ? "Flat rate for up to 5 members."
               : `Custom rate based on ${attendees} members.`}
           </p>
         </div>
         <div className="text-right">
-          <p className="font-display font-black text-3xl text-white drop-shadow-md">₹{price}<span className="text-sm text-white/40 font-normal">/hr</span></p>
+          <p className="font-display font-black text-3xl text-white drop-shadow-md">{price ? `₹${price}` : "—"}<span className="text-sm text-white/40 font-normal">/hr</span></p>
         </div>
       </div>
 
       <div className="pt-4">
         <button 
           onClick={onNext} 
-          className="w-full h-[50px] bg-white text-black hover:bg-white/90 font-bold tracking-widest uppercase transition-all rounded-xl text-xs shadow-sm transform hover:-translate-y-0.5"
+          disabled={attendees < 1 || attendees > 20}
+          className="w-full min-h-[50px] bg-white text-black hover:bg-white/90 font-bold tracking-widest uppercase transition-all rounded-xl text-xs shadow-sm transform hover:-translate-y-0.5 disabled:opacity-40 disabled:hover:translate-y-0"
         >
           Continue to Date & Time
         </button>

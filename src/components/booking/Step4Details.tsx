@@ -1,6 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { Button } from "@/components/ui/Button";
-import { Input } from "@/components/ui/Input";
 import { createClient } from "@/utils/supabase/client";
 import { User } from "@supabase/supabase-js";
 
@@ -23,7 +21,11 @@ export function Step4Details({ onNext, onBack, bandName, setBandName, equipmentR
     });
   }, [supabase.auth]);
 
-  // Optionally prefill bandName from user profile in a real app if empty.
+  useEffect(() => {
+    if (!bandName && user?.user_metadata?.band_name) {
+      setBandName(String(user.user_metadata.band_name));
+    }
+  }, [user, bandName, setBandName]);
 
   const isFormValid = bandName.trim().length > 0;
 

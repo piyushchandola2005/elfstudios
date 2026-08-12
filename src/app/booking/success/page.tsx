@@ -1,15 +1,21 @@
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { CheckCircle2 } from "lucide-react";
+import { redirect } from "next/navigation";
+import { createClient } from "@/utils/supabase/server";
 
 export default async function SuccessPage({
-  searchParams,
+  searchParams: searchParamsPromise,
 }: {
-  searchParams: { txnid?: string };
+  searchParams: Promise<{ txnid?: string }>;
 }) {
+  const searchParams = await searchParamsPromise;
   let ticketNumber = null;
   let bandName = null;
   let date = null;
+  const supabase = await createClient();
+  const { data: { user: authUser } } = await supabase.auth.getUser();
+  if (!authUser) redirect("/login");
   
   if (searchParams.txnid) {
     const booking = await prisma.booking.findUnique({
@@ -18,12 +24,17 @@ export default async function SuccessPage({
         ticketNumber: true,
         date: true,
         bandName: true,
+        status: true,
+        userId: true,
         user: {
           select: { bandName: true, name: true }
         }
       }
     });
-    ticketNumber = booking?.ticketNumber;
+    if (!booking || booking.userId !== authUser.id || booking.status !== "CONFIRMED") {
+      redirect("/booking/error?reason=not-confirmed");
+    }
+    ticketNumber = booking.ticketNumber;
     bandName = booking?.bandName || booking?.user?.bandName || booking?.user?.name || "Musician";
     date = booking?.date;
   }
@@ -42,11 +53,11 @@ export default async function SuccessPage({
           </div>
 
           <h1 className="font-display text-4xl md:text-5xl text-white font-black uppercase tracking-tighter mb-4 drop-shadow-lg">
-            You're In!
+            You’re In!
           </h1>
           
           <p className="font-sans text-white/60 text-sm md:text-base font-light mb-10 max-w-md mx-auto leading-relaxed">
-            {bandName}, your jam session is locked and loaded. We've received your payment and your slots are secured. See you at the pad.
+            {bandName}, your jam session is locked and loaded. We’ve received your payment and your slots are secured. See you at the pad.
           </p>
           
           {ticketNumber && (

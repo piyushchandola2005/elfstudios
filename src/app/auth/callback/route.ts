@@ -9,7 +9,7 @@ export async function GET(request: Request) {
   const next = searchParams.get('next') ?? '/book'
 
   if (code) {
-    const supabase = createClient()
+    const supabase = await createClient()
     const { error, data: sessionData } = await supabase.auth.exchangeCodeForSession(code)
     if (!error) {
       // Check if the user has a phone number set in their metadata

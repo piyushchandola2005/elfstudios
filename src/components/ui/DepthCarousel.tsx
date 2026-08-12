@@ -437,6 +437,7 @@ const DepthCarousel = forwardRef<DepthCarouselRef, DepthCarouselProps>(({
                 {item.content}
               </div>
             ) : (
+              // eslint-disable-next-line @next/next/no-img-element
               <img className="depth-carousel__img" src={item.image} alt={item.alt || ''} draggable={false} />
             )}
             <span

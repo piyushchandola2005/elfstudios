@@ -1,50 +1,57 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { verifyHash } from "@/lib/payu";
+import { verifyHash, verifyPaymentWithPayU } from "@/lib/payu";
 import { sendBookingConfirmation } from "@/lib/mail";
 
 export async function POST(req: Request) {
+  const siteUrl = (process.env.SITE_URL || new URL(req.url).origin).replace(/\/$/, "");
   try {
     const formData = await req.formData();
-    const payuResponse = Object.fromEntries(formData.entries()) as Record<string, string>;
-
-    const { txnid, status, hash } = payuResponse;
-
-    if (!txnid || !status || !hash) {
-      return NextResponse.redirect(`${process.env.NEXTAUTH_URL}/booking/error`);
+    const response = Object.fromEntries(formData.entries()) as Record<string, string>;
+    const { txnid, status, hash } = response;
+    if (!txnid || !status || !hash || !verifyHash(response, hash)) {
+      return NextResponse.redirect(`${siteUrl}/booking/error?reason=invalid-response`, 303);
     }
 
-    // Verify Hash to prevent tampering
-    const isValid = verifyHash(payuResponse, hash);
-
-    if (!isValid) {
-      console.error("PayU Hash Verification Failed for txnid:", txnid);
-      return NextResponse.redirect(`${process.env.NEXTAUTH_URL}/booking/error`);
+    const booking = await prisma.booking.findUnique({ where: { payuTxnId: txnid }, include: { user: true } });
+    if (!booking || response.udf1 !== booking.id || Number(response.amount) !== Number(booking.totalAmount)) {
+      return NextResponse.redirect(`${siteUrl}/booking/error?reason=payment-mismatch`, 303);
     }
 
-    // Hash is valid, update database
     if (status === "success") {
-      const confirmedBooking = await prisma.booking.update({
-        where: { payuTxnId: txnid },
-        data: { status: "CONFIRMED" },
-        include: { user: true } // Include user to get email address
-      });
-      
-      // Send confirmation emails in the background
-      if (confirmedBooking.user?.email) {
-        sendBookingConfirmation(confirmedBooking, confirmedBooking.user.email).catch(console.error);
+      const verified = await verifyPaymentWithPayU(txnid, Number(booking.totalAmount).toFixed(2));
+      if (!verified) {
+        return NextResponse.redirect(`${siteUrl}/booking/error?reason=verification-pending`, 303);
       }
-      
-      return NextResponse.redirect(`${process.env.NEXTAUTH_URL}/booking/success?txnid=${txnid}`);
-    } else {
-      await prisma.booking.update({
-        where: { payuTxnId: txnid },
-        data: { status: "CANCELLED" },
+      const updated = await prisma.booking.updateMany({
+        where: { id: booking.id, status: { not: "CONFIRMED" } },
+        data: {
+          status: "CONFIRMED",
+          paymentStatus: "PAID",
+          paidAt: new Date(),
+          expiresAt: null,
+          payuPaymentId: response.mihpayid || null,
+        },
       });
-      return NextResponse.redirect(`${process.env.NEXTAUTH_URL}/booking/error`);
+      if (updated.count && booking.user.email) {
+        const confirmed = await prisma.booking.findUnique({ where: { id: booking.id }, include: { user: true } });
+        if (confirmed) await sendBookingConfirmation(confirmed, booking.user.email);
+      }
+      return NextResponse.redirect(`${siteUrl}/booking/success?txnid=${encodeURIComponent(txnid)}`, 303);
     }
+
+    if (status === "pending") {
+      return NextResponse.redirect(`${siteUrl}/booking/error?reason=payment-pending`, 303);
+    }
+
+    await prisma.booking.updateMany({
+      where: { id: booking.id, status: "PENDING" },
+      data: { status: "CANCELLED", paymentStatus: "FAILED", cancelledAt: new Date(), cancelledBy: "PAYU" },
+    });
+    return NextResponse.redirect(`${siteUrl}/booking/error?reason=payment-failed`, 303);
   } catch (error) {
-    console.error("PayU Callback Error:", error);
-    return NextResponse.redirect(`${process.env.NEXTAUTH_URL}/booking/error`);
+    console.error("PayU callback error:", error);
+    return NextResponse.redirect(`${siteUrl}/booking/error?reason=callback-error`, 303);
   }
 }
+

@@ -70,7 +70,7 @@ export default async function AdminCalendarPage() {
                           {formattedSlots}
                         </div>
                         <div className="text-sm font-sans font-bold text-elf-orange mt-1 truncate">
-                          {booking.user.bandName || booking.user.name || "Unknown Band"}
+                          {booking.bandName || booking.user.name || "Unknown Band"}
                         </div>
                         <div className="text-[10px] font-sans text-gray-500 mt-1">
                           {booking.user.phone}

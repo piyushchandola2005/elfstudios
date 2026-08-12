@@ -9,7 +9,7 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
   // Admin Protection
@@ -51,6 +51,12 @@ export default async function AdminLayout({
             className="px-4 py-3 text-sm font-sans rounded-xl hover:bg-white/10 transition-colors whitespace-nowrap"
           >
             Bookings
+          </Link>
+          <Link
+            href="/my-bookings"
+            className="px-4 py-3 text-sm font-sans rounded-xl hover:bg-white/10 transition-colors whitespace-nowrap"
+          >
+            Customer View
           </Link>
           <Link 
             href="/admin/calendar" 

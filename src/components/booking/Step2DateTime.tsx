@@ -105,6 +105,11 @@ export function Step2DateTime({
     );
   };
 
+  const isPastSlotToday = (slotId: string) => {
+    if (!isSameDay(activeDate, new Date())) return false;
+    return Number(slotId) <= new Date().getHours();
+  };
+
   const handleDateSelect = (d: Date) => {
     setDate(d);
     setSelectedSlots([]); // Reset slots when date changes
@@ -210,12 +215,14 @@ export function Step2DateTime({
           
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-2">
             {timeSlots.map((slot) => (
-              <div
+              <button
+                type="button"
                 key={slot.id}
-                onClick={() => !isLoading && slot.status === "AVAILABLE" && toggleSlot(slot.id)}
+                disabled={isLoading || slot.status === "BOOKED" || isPastSlotToday(slot.id)}
+                onClick={() => toggleSlot(slot.id)}
                 className={`py-3 px-2 rounded-xl flex flex-col items-center justify-center cursor-pointer transition-all duration-200 border backdrop-blur-sm relative overflow-hidden
                   ${
-                    slot.status === "BOOKED"
+                    slot.status === "BOOKED" || isPastSlotToday(slot.id)
                       ? "border-red-500/20 bg-red-500/10 cursor-not-allowed opacity-80"
                       : isLoading
                       ? "border-white/5 bg-white/5 opacity-50 cursor-wait"
@@ -226,14 +233,14 @@ export function Step2DateTime({
                 `}
               >
                 <span className={`font-mono font-bold tracking-tight mb-1 text-[11px] whitespace-nowrap z-10 ${slot.status === "BOOKED" ? "text-white/50" : ""}`}>{slot.time}</span>
-                {slot.status === "BOOKED" ? (
+                {slot.status === "BOOKED" || isPastSlotToday(slot.id) ? (
                   <span className="text-[10px] font-bold uppercase tracking-widest text-red-400/90 z-10 text-center px-1">
-                    {slot.bandName || "Booked"}
+                    {isPastSlotToday(slot.id) ? "Passed" : slot.bandName || "Booked"}
                   </span>
                 ) : (
                   <span className={`text-[9px] uppercase tracking-widest z-10 ${selectedSlots.includes(slot.id) ? 'text-black/70' : 'text-white/60 font-bold'}`}>Available</span>
                 )}
-              </div>
+              </button>
             ))}
           </div>
         </div>

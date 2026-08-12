@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Step1AttendeeCount } from "./Step1AttendeeCount";
 import { Step2DateTime } from "./Step2DateTime";
 import { Step4Details } from "./Step4Details";
@@ -9,33 +9,14 @@ import Image from "next/image";
 
 export function BookingFlow() {
   const [step, setStep] = useState(1);
-  const [attendees, setAttendees] = useState(5);
+  const [attendees, setAttendees] = useState(0);
   const [hours, setHours] = useState(1);
   
   const [date, setDate] = useState<Date | null>(null);
   const [selectedSlots, setSelectedSlots] = useState<string[]>([]);
   const [bandName, setBandName] = useState("");
   const [equipmentRequests, setEquipmentRequests] = useState("");
-  const [ticketNumber, setTicketNumber] = useState("TK-...");
-
-  useEffect(() => {
-    async function fetchTicketNumber() {
-      try {
-        const res = await fetch("/api/generate-ticket");
-        if (res.ok) {
-          const data = await res.json();
-          setTicketNumber(data.ticketNumber);
-        }
-      } catch (error) {
-        console.error("Failed to generate ticket number", error);
-        // Fallback
-        const letter = String.fromCharCode(65 + Math.floor(Math.random() * 26));
-        const digits = String(Math.floor(Math.random() * 100000)).padStart(5, "0");
-        setTicketNumber(`${letter}-${digits}`);
-      }
-    }
-    fetchTicketNumber();
-  }, []);
+  const ticketNumber = "Assigned after payment";
   
   const handleNext = () => setStep((s) => Math.min(s + 1, 4));
   const handleBack = () => setStep((s) => Math.max(s - 1, 1));
@@ -57,7 +38,7 @@ export function BookingFlow() {
             Book Session
           </h1>
           <p className="text-white/40 font-mono text-[10px] md:text-xs uppercase tracking-[0.3em] mt-3">
-            Start by telling us who's jamming.
+            Start by telling us who’s jamming.
           </p>
         </div>
 

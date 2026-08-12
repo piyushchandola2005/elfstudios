@@ -72,6 +72,7 @@ model Booking {
   
   attendees        Int
   date             DateTime // The date of the jam session
+  originalDate     DateTime // Immutable first session date; anchors the reschedule window
   slots            String[] // Array of slot IDs (e.g. ["10", "11"])
   equipmentRequests String?
   ticketNumber     String?  @unique
@@ -80,8 +81,43 @@ model Booking {
   totalAmount      Float
   
   status           String   @default("PENDING") // PENDING, CONFIRMED, CANCELLED
+  paymentStatus    String   @default("UNPAID") // UNPAID, PENDING, PAID, FAILED, EXPIRED
   payuTxnId        String?  @unique // To store PayU transaction ID after success
+  payuPaymentId    String?
+  paidAt           DateTime?
+  expiresAt        DateTime?
+  cancelledAt      DateTime?
+  cancelledBy      String?
+  cancellationReason String?
+
+  changeRequests   BookingChangeRequest[]
   
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
+
+  @@index([date, status])
+  @@index([userId, date])
+  @@index([expiresAt])
+}
+
+model BookingChangeRequest {
+  id             String   @id @default(cuid())
+  bookingId      String
+  booking        Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  requestedById  String
+  type           String   // CANCEL or RESCHEDULE
+  status         String   @default("PENDING") // PENDING, APPROVED, REJECTED
+  reason         String?
+  requestedDate  DateTime?
+  requestedSlots String[]
+  adminNote      String?
+  resolvedBy     String?
+  resolvedAt     DateTime?
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([bookingId, status])
+  @@index([status, createdAt])
 }

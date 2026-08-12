@@ -103,7 +103,7 @@ export default async function AdminDashboard() {
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <div className="font-bold text-black">{booking.user.bandName || "Unknown Band"}</div>
+                        <div className="font-bold text-black">{booking.bandName || "Unknown Band"}</div>
                         <div className="text-gray-500 text-xs">{booking.user.name || booking.user.email}</div>
                         <div className="text-gray-400 text-xs">{booking.user.phone}</div>
                       </td>

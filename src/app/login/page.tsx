@@ -82,7 +82,7 @@ export default function LoginPage() {
           
           {/* Left Side - Auth Form */}
           <div className="flex flex-col items-center justify-center p-6 lg:p-10 relative bg-white">
-            <a href="https://www.elfstudios.in/elf-jampad" className="absolute top-8 left-8 text-gray-400 hover:text-black font-mono text-xs tracking-widest uppercase transition-colors">
+            <a href="https://www.elfstudios.in/elf-jampad" className="absolute top-5 left-5 z-10 text-gray-400 hover:text-black font-mono text-[10px] md:text-xs tracking-widest uppercase transition-colors">
               &lt; Back to Home
             </a>
             
@@ -146,7 +146,7 @@ export default function LoginPage() {
                 <form onSubmit={handleAuth} className="space-y-4">
                   
                   {!isLogin && (
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       {/* Name Input */}
                       <div className="space-y-2">
                         <label htmlFor="name" className="text-[11px] font-mono uppercase tracking-widest text-gray-500">
@@ -155,6 +155,7 @@ export default function LoginPage() {
                         <input
                           id="name"
                           type="text"
+                          autoComplete="name"
                           required={!isLogin}
                           value={name}
                           onChange={(e) => setName(e.target.value)}
@@ -171,6 +172,8 @@ export default function LoginPage() {
                         <input
                           id="phone"
                           type="tel"
+                          inputMode="tel"
+                          autoComplete="tel"
                           required={!isLogin}
                           value={phone}
                           onChange={(e) => setPhone(e.target.value)}
@@ -189,6 +192,7 @@ export default function LoginPage() {
                     <input
                       id="email"
                       type="email"
+                      autoComplete="email"
                       required
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
@@ -205,6 +209,7 @@ export default function LoginPage() {
                     <input
                       id="password"
                       type="password"
+                      autoComplete={isLogin ? "current-password" : "new-password"}
                       required
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
