@@ -43,7 +43,7 @@ export function Step5Summary({
           totalAmount: total,
           bandName,
           equipmentRequests,
-          date: date?.toISOString(),
+          date: date ? format(date, "yyyy-MM-dd") : undefined,
           slots,
           ticketNumber
         }),

@@ -48,7 +48,7 @@ export function Step2DateTime({
       setIsLoading(true);
       setBookedSlots({}); // Instantly clear previous date's slots while fetching new ones
       try {
-        const dateStr = activeDate.toISOString();
+        const dateStr = format(activeDate, "yyyy-MM-dd");
         const res = await fetch(`/api/bookings?date=${dateStr}`);
         if (!res.ok) throw new Error("Failed to fetch bookings");
         
