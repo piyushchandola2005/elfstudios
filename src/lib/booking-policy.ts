@@ -15,9 +15,9 @@ export const BOOKING_POLICY = {
     process.env.PENDING_BOOKING_HOLD_MINUTES,
     DEFAULT_PENDING_HOLD_MINUTES,
   ),
-  openingHour: 10,
-  closingHour: 22,
-  maxAttendees: 20,
+  openingHour: 11,
+  closingHour: 23,
+  maxAttendees: 10,
 } as const;
 
 function readPositiveInt(value: string | undefined, fallback: number) {
@@ -40,7 +40,7 @@ export function calculatePrice(attendees: number, hours: number): PriceBreakdown
     throw new Error("Select between 1 and 12 hours.");
   }
 
-  const pricePerHourPaise = (attendees <= 5 ? 400 : attendees * 100) * 100;
+  const pricePerHourPaise = (attendees <= 6 ? 400 : 700) * 100;
   const subtotalPaise = pricePerHourPaise * hours;
   const discountPaise = hours >= 10 ? Math.round(subtotalPaise * 0.1) : 0;
 
@@ -85,6 +85,9 @@ export function normalizeBookingDate(input: unknown): Date {
     date.getUTCDate() !== day
   ) {
     throw new Error("The booking date is invalid.");
+  }
+  if (date.getUTCDay() === 1) {
+    throw new Error("Mondays are closed. Please select another day.");
   }
   return date;
 }

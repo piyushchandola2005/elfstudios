@@ -27,10 +27,10 @@ export function Step5Summary({
   onCancel 
 }: Step5Props) {
   const [loading, setLoading] = useState(false);
-  const pricePerHour = attendees <= 5 ? 400 : 100 * attendees;
+  const pricePerHour = attendees <= 6 ? 400 : 700;
   const subtotal = pricePerHour * hours;
   const discount = hours >= 10 ? Math.round(subtotal * 0.1) : 0;
-  const total = subtotal - discount;
+  const total = 1; // subtotal - discount; // OVERRIDE FOR TESTING
 
   const handlePayment = async () => {
     setLoading(true);

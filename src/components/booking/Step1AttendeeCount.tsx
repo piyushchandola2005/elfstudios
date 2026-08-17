@@ -19,10 +19,10 @@ export function Step1AttendeeCount({
     // > 5 people: ₹100/hr * attendees
     if (attendees < 1) {
       setPrice(0);
-    } else if (attendees <= 5) {
+    } else if (attendees <= 6) {
       setPrice(400);
     } else {
-      setPrice(100 * attendees);
+      setPrice(700);
     }
   }, [attendees]);
 
@@ -49,9 +49,9 @@ export function Step1AttendeeCount({
             id="attendees"
             type="number"
             min="1"
-            max="20"
+            max="10"
             value={attendees || ""}
-            onChange={(e) => setAttendees(e.target.value === "" ? 0 : Math.min(20, Math.max(1, parseInt(e.target.value, 10) || 1)))}
+            onChange={(e) => setAttendees(e.target.value === "" ? 0 : Math.min(10, Math.max(1, parseInt(e.target.value, 10) || 1)))}
             className="w-full h-[50px] bg-white/5 border border-white/10 rounded-xl px-4 text-white focus:outline-none focus:border-white focus:ring-1 focus:ring-white/50 transition-all font-sans text-[15px] shadow-sm backdrop-blur-sm"
           />
         </div>
@@ -63,9 +63,9 @@ export function Step1AttendeeCount({
           <p className="font-sans text-[11px] text-white/60 mt-1 font-light">
             {attendees < 1
               ? "Enter your group size to see the rate."
-              : attendees <= 5
-              ? "Flat rate for up to 5 members."
-              : `Custom rate based on ${attendees} members.`}
+              : attendees <= 6
+              ? "Flat rate for up to 6 members."
+              : "Flat rate for 7-10 members."}
           </p>
         </div>
         <div className="text-right">
@@ -76,7 +76,7 @@ export function Step1AttendeeCount({
       <div className="pt-4">
         <button 
           onClick={onNext} 
-          disabled={attendees < 1 || attendees > 20}
+          disabled={attendees < 1 || attendees > 10}
           className="w-full min-h-[50px] bg-white text-black hover:bg-white/90 font-bold tracking-widest uppercase transition-all rounded-xl text-xs shadow-sm transform hover:-translate-y-0.5 disabled:opacity-40 disabled:hover:translate-y-0"
         >
           Continue to Date & Time

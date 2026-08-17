@@ -4,7 +4,8 @@ import { verifyHash, verifyPaymentWithPayU } from "@/lib/payu";
 import { sendBookingConfirmation } from "@/lib/mail";
 
 export async function POST(req: Request) {
-  const siteUrl = (process.env.SITE_URL || new URL(req.url).origin).replace(/\/$/, "");
+  const envSiteUrl = process.env.SITE_URL ? (process.env.SITE_URL.startsWith('http') ? process.env.SITE_URL : `https://${process.env.SITE_URL}`) : null;
+  const siteUrl = (envSiteUrl || new URL(req.url).origin).replace(/\/$/, "");
   try {
     const formData = await req.formData();
     const response = Object.fromEntries(formData.entries()) as Record<string, string>;

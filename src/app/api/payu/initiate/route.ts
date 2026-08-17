@@ -23,7 +23,7 @@ export async function POST(req: Request) {
     }
 
     const price = calculatePrice(attendees, slots.length);
-    const totalAmount = formatRupees(price.totalPaise);
+    const totalAmount = 1; // formatRupees(price.totalPaise); - OVERRIDE FOR TESTING
     const txnid = `ELF${Date.now()}${randomBytes(4).toString("hex").slice(0, 5)}`;
     const ticketNumber = `E-${randomBytes(4).toString("hex").toUpperCase()}`;
     const now = new Date();
@@ -82,7 +82,8 @@ export async function POST(req: Request) {
     }
 
     assertPayUConfigured();
-    const siteUrl = (process.env.SITE_URL || new URL(req.url).origin).replace(/\/$/, "");
+    const envSiteUrl = process.env.SITE_URL ? (process.env.SITE_URL.startsWith('http') ? process.env.SITE_URL : `https://${process.env.SITE_URL}`) : null;
+    const siteUrl = (envSiteUrl || new URL(req.url).origin).replace(/\/$/, "");
     const payuData: Record<string, string> = {
       key: PAYU_MERCHANT_KEY,
       txnid,

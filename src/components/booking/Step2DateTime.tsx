@@ -72,12 +72,12 @@ export function Step2DateTime({
     fetchBookings();
   }, [activeDate]);
 
-  // Generate 12 slots from 10 AM to 10 PM
+  // Generate 12 slots from 11 AM to 11 PM
   const timeSlots = useMemo(() => {
     const slots = [];
-    for (let i = 10; i < 22; i++) {
-      const ampm1 = i >= 12 ? "PM" : "AM";
-      const ampm2 = (i + 1) >= 12 ? "PM" : "AM";
+    for (let i = 11; i < 23; i++) {
+      const ampm1 = i >= 12 && i < 24 ? "PM" : "AM";
+      const ampm2 = (i + 1) >= 12 && (i + 1) < 24 ? "PM" : "AM";
       const hour1 = i > 12 ? i - 12 : i;
       const hour2 = (i + 1) > 12 ? (i + 1) - 12 : (i + 1);
       
@@ -173,17 +173,19 @@ export function Step2DateTime({
             {days.map((day, idx) => {
               const isSelected = isSameDay(day, activeDate);
               const isPast = isBefore(day, today);
+              const isMonday = day.getDay() === 1;
               const isCurrentMonth = isSameMonth(day, monthStart);
+              const isDisabled = isPast || isMonday;
               
               return (
                 <button
                   key={idx}
-                  onClick={() => !isPast && handleDateSelect(day)}
-                  disabled={isPast}
+                  onClick={() => !isDisabled && handleDateSelect(day)}
+                  disabled={isDisabled}
                   className={`
                     h-8 flex items-center justify-center rounded-lg text-[13px] font-sans transition-all
                     ${!isCurrentMonth ? "text-white/30" : ""}
-                    ${isPast ? "text-white/20 cursor-not-allowed opacity-50" : "hover:border-white hover:bg-white/10 border border-transparent"}
+                    ${isDisabled ? "text-white/20 cursor-not-allowed opacity-50" : "hover:border-white hover:bg-white/10 border border-transparent"}
                     ${isSelected ? "bg-white text-black font-bold shadow-sm" : "text-white"}
                     ${isToday(day) && !isSelected ? "text-white/70 font-bold" : ""}
                   `}
