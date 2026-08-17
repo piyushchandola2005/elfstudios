@@ -61,7 +61,7 @@ export default function BookPage() {
   const isMobile = windowWidth < 768;
 
   return (
-    <div className="h-screen w-full relative bg-[#1E1E1E] flex flex-col overflow-hidden selection:bg-white/20 selection:text-white">
+    <div className="h-[100dvh] w-full relative bg-[#1E1E1E] flex flex-col overflow-hidden selection:bg-white/20 selection:text-white">
       
       {/* 3D Background */}
       <div className="absolute inset-0 z-0 overflow-hidden flex items-center justify-center">
@@ -80,7 +80,7 @@ export default function BookPage() {
       </div>
 
       {/* Top Navigation */}
-      <div className="relative z-10 w-full p-6 flex justify-between items-center max-w-7xl mx-auto border-b border-white/5 shrink-0">
+      <div className="relative z-10 w-full p-6 flex justify-between items-center max-w-7xl mx-auto border-b border-white/5 shrink-0 bg-[#1E1E1E]/80 backdrop-blur-md">
         <a href="https://www.elfstudios.in/elf-jampad" className="text-gray-400 hover:text-white font-mono text-[10px] md:text-xs tracking-widest uppercase transition-colors flex items-center gap-2 group">
           <span className="group-hover:-translate-x-1 transition-transform">&lt;</span> Back
         </a>
@@ -116,7 +116,7 @@ export default function BookPage() {
       </div>
 
       {/* Main Content Area */}
-      <div className="relative z-10 flex-1 flex flex-col w-full overflow-hidden p-4 md:p-8">
+      <div className="relative z-10 flex-1 flex flex-col w-full overflow-y-auto p-4 md:p-8 custom-scrollbar">
         <BookingFlow />
       </div>
     </div>

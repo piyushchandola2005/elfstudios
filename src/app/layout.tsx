@@ -46,7 +46,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${afacad.variable} ${cousine.variable} ${calSans.variable} font-sans antialiased bg-black text-white`}
+        className={`${afacad.variable} ${cousine.variable} ${calSans.variable} font-sans antialiased bg-black text-white overflow-x-hidden`}
       >
         <Providers>{children}</Providers>
       </body>
