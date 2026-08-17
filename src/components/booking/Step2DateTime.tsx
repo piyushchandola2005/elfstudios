@@ -41,7 +41,15 @@ export function Step2DateTime({
 
   // Stable reference for today's date to prevent infinite useEffect loops
   const today = useMemo(() => startOfDay(new Date()), []);
-  const activeDate = date || today;
+  const defaultDate = useMemo(() => {
+    if (today.getDay() === 1) {
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      return tomorrow;
+    }
+    return today;
+  }, [today]);
+  const activeDate = date || defaultDate;
 
   useEffect(() => {
     async function fetchBookings() {
@@ -215,36 +223,45 @@ export function Step2DateTime({
             )}
           </div>
           
-          <div className="grid grid-cols-2 lg:grid-cols-3 gap-2">
-            {timeSlots.map((slot) => (
-              <button
-                type="button"
-                key={slot.id}
-                disabled={isLoading || slot.status === "BOOKED" || isPastSlotToday(slot.id)}
-                onClick={() => toggleSlot(slot.id)}
-                className={`py-3 px-2 rounded-xl flex flex-col items-center justify-center cursor-pointer transition-all duration-200 border backdrop-blur-sm relative overflow-hidden
-                  ${
-                    slot.status === "BOOKED" || isPastSlotToday(slot.id)
-                      ? "border-red-500/20 bg-red-500/10 cursor-not-allowed opacity-80"
-                      : isLoading
-                      ? "border-white/5 bg-white/5 opacity-50 cursor-wait"
-                      : selectedSlots.includes(slot.id)
-                      ? "border-white bg-white text-black shadow-sm scale-[0.98]"
-                      : "border-white/10 hover:border-white/50 bg-white/5 text-white hover:bg-white/10 shadow-sm"
-                  }
-                `}
-              >
-                <span className={`font-mono font-bold tracking-tight mb-1 text-[11px] whitespace-nowrap z-10 ${slot.status === "BOOKED" ? "text-white/50" : ""}`}>{slot.time}</span>
-                {slot.status === "BOOKED" || isPastSlotToday(slot.id) ? (
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-red-400/90 z-10 text-center px-1">
-                    {isPastSlotToday(slot.id) ? "Passed" : slot.bandName || "Booked"}
-                  </span>
-                ) : (
-                  <span className={`text-[9px] uppercase tracking-widest z-10 ${selectedSlots.includes(slot.id) ? 'text-black/70' : 'text-white/60 font-bold'}`}>Available</span>
-                )}
-              </button>
-            ))}
-          </div>
+          {activeDate.getDay() === 1 ? (
+            <div className="h-[200px] flex items-center justify-center border border-white/10 rounded-xl bg-white/5 backdrop-blur-sm text-center p-6">
+              <div>
+                <p className="font-display text-xl text-white font-bold uppercase tracking-widest">Studio Closed</p>
+                <p className="font-sans text-[13px] text-white/50 mt-2">Mondays are our day off. Please select another date.</p>
+              </div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-2">
+              {timeSlots.map((slot) => (
+                <button
+                  type="button"
+                  key={slot.id}
+                  disabled={isLoading || slot.status === "BOOKED" || isPastSlotToday(slot.id)}
+                  onClick={() => toggleSlot(slot.id)}
+                  className={`py-3 px-2 rounded-xl flex flex-col items-center justify-center cursor-pointer transition-all duration-200 border backdrop-blur-sm relative overflow-hidden
+                    ${
+                      slot.status === "BOOKED" || isPastSlotToday(slot.id)
+                        ? "border-red-500/20 bg-red-500/10 cursor-not-allowed opacity-80"
+                        : isLoading
+                        ? "border-white/5 bg-white/5 opacity-50 cursor-wait"
+                        : selectedSlots.includes(slot.id)
+                        ? "border-white bg-white text-black shadow-sm scale-[0.98]"
+                        : "border-white/10 hover:border-white/50 bg-white/5 text-white hover:bg-white/10 shadow-sm"
+                    }
+                  `}
+                >
+                  <span className={`font-mono font-bold tracking-tight mb-1 text-[11px] whitespace-nowrap z-10 ${slot.status === "BOOKED" ? "text-white/50" : ""}`}>{slot.time}</span>
+                  {slot.status === "BOOKED" || isPastSlotToday(slot.id) ? (
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-red-400/90 z-10 text-center px-1">
+                      {isPastSlotToday(slot.id) ? "Passed" : slot.bandName || "Booked"}
+                    </span>
+                  ) : (
+                    <span className={`text-[9px] uppercase tracking-widest z-10 ${selectedSlots.includes(slot.id) ? 'text-black/70' : 'text-white/60 font-bold'}`}>Available</span>
+                  )}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
