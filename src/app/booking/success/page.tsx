@@ -15,7 +15,6 @@ export default async function SuccessPage({
   let date = null;
   const supabase = await createClient();
   const { data: { user: authUser } } = await supabase.auth.getUser();
-  if (!authUser) redirect("/login");
   
   if (searchParams.txnid) {
     const booking = await prisma.booking.findUnique({
@@ -31,12 +30,20 @@ export default async function SuccessPage({
         }
       }
     });
-    if (!booking || booking.userId !== authUser.id || booking.status !== "CONFIRMED") {
+    
+    if (!booking || booking.status !== "CONFIRMED") {
       redirect("/booking/error?reason=not-confirmed");
     }
+    
+    if (authUser && booking.userId !== authUser.id) {
+      redirect("/booking/error?reason=not-confirmed");
+    }
+
     ticketNumber = booking.ticketNumber;
     bandName = booking?.bandName || booking?.user?.bandName || booking?.user?.name || "Musician";
     date = booking?.date;
+  } else if (!authUser) {
+    redirect("/login");
   }
 
   return (
