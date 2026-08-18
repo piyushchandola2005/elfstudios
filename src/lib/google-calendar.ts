@@ -152,3 +152,31 @@ export async function syncBookingToGoogleCalendar(booking: CalendarBooking) {
   });
   return { synced: true, action: "created" as const };
 }
+
+export async function createGoogleCalendarTestEvent() {
+  const config = calendarConfig();
+  if (!config) throw new Error("Google Calendar is not configured yet.");
+
+  const now = new Date();
+  const start = new Date(now.getTime() + 10 * 60 * 1000);
+  start.setUTCSeconds(0, 0);
+  const end = new Date(start.getTime() + 30 * 60 * 1000);
+  const calendarId = encodeURIComponent(config.calendarId);
+  const response = await calendarRequest(
+    `/calendars/${calendarId}/events?sendUpdates=none`,
+    {
+      method: "POST",
+      body: JSON.stringify({
+        summary: "Elf Studios — Calendar Sync Test",
+        description: "Temporary event created from the Elf Studios admin panel to verify Google Calendar sync.",
+        start: { dateTime: start.toISOString(), timeZone: TIME_ZONE },
+        end: { dateTime: end.toISOString(), timeZone: TIME_ZONE },
+        colorId: "9",
+      }),
+    },
+    config,
+  );
+  const event = await response.json() as { id?: string; htmlLink?: string };
+  if (!event.id) throw new Error("Google Calendar did not return an event ID.");
+  return { id: event.id, htmlLink: event.htmlLink || null, start: start.toISOString() };
+}

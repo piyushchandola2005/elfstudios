@@ -1,6 +1,8 @@
 import React from "react";
 import { prisma } from "@/lib/prisma";
 import { format, addDays, startOfToday } from "date-fns";
+import { isGoogleCalendarConfigured } from "@/lib/google-calendar";
+import { CalendarSyncTestButton } from "./CalendarSyncTestButton";
 
 export const dynamic = 'force-dynamic';
 
@@ -31,6 +33,7 @@ export default async function AdminCalendarPage() {
         <p className="text-gray-500 font-sans mt-2">
           Confirmed bookings for the next 7 days.
         </p>
+        <CalendarSyncTestButton configured={isGoogleCalendarConfigured()} />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-7 gap-4">
