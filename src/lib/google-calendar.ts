@@ -56,9 +56,16 @@ async function accessToken(config: GoogleCalendarConfig) {
     }),
     cache: "no-store",
   });
-  const payload = await response.json() as { access_token?: string; error_description?: string };
-  if (!response.ok || !payload.access_token) {
-    throw new Error(payload.error_description || "Google Calendar authorization failed.");
+  const payload = await response.json().catch(() => null) as {
+    access_token?: string;
+    error?: string;
+    error_description?: string;
+  } | null;
+  if (!response.ok || !payload?.access_token) {
+    const reason = [payload?.error, payload?.error_description].filter(Boolean).join(": ");
+    throw new Error(
+      `Google Calendar authorization failed (${response.status})${reason ? `: ${reason}` : ""}.`,
+    );
   }
   return payload.access_token;
 }
