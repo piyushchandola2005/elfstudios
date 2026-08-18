@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { requireApiAdmin } from "@/lib/auth";
 import { normalizeBookingDate, sessionStart, validateSlots } from "@/lib/booking-policy";
 import { sendBookingChangeNotification } from "@/lib/mail";
+import { syncBookingToGoogleCalendar } from "@/lib/google-calendar";
 
 export async function PATCH(req: Request, { params: paramsPromise }: { params: Promise<{ id: string }> }) {
   const params = await paramsPromise;
@@ -39,6 +40,7 @@ export async function PATCH(req: Request, { params: paramsPromise }: { params: P
         return changed;
       });
       if (booking.user.email) await sendBookingChangeNotification({ ...booking, ...updated }, booking.user.email, "CANCELLED").catch(console.error);
+      await syncBookingToGoogleCalendar({ ...booking, ...updated }).catch((error) => console.error("Google Calendar cancellation sync failed:", error));
       return NextResponse.json({ booking: updated });
     }
 
@@ -81,6 +83,7 @@ export async function PATCH(req: Request, { params: paramsPromise }: { params: P
         return changed;
       }, { isolationLevel: "Serializable" });
       if (booking.user.email) await sendBookingChangeNotification({ ...booking, ...updated }, booking.user.email, "RESCHEDULED").catch(console.error);
+      await syncBookingToGoogleCalendar({ ...booking, ...updated }).catch((error) => console.error("Google Calendar reschedule sync failed:", error));
       return NextResponse.json({ booking: updated });
     }
 

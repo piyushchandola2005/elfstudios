@@ -108,6 +108,18 @@ export function sessionStart(date: Date, slots: string[]): Date {
   ));
 }
 
+export function sessionEnd(date: Date, slots: string[]): Date {
+  const lastHour = Math.max(...slots.map(Number)) + 1;
+  // Booking dates are stored as UTC date-only values. Convert the selected IST hour to UTC.
+  return new Date(Date.UTC(
+    date.getUTCFullYear(),
+    date.getUTCMonth(),
+    date.getUTCDate(),
+    lastHour - 6,
+    30,
+  ));
+}
+
 export function canRequestCancellation(date: Date, slots: string[], now = new Date()) {
   const cutoff = new Date(sessionStart(date, slots).getTime() - BOOKING_POLICY.changeCutoffHours * 60 * 60 * 1000);
   return { allowed: now < cutoff, cutoff };

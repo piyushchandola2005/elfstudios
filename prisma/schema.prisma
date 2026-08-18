@@ -89,6 +89,8 @@ model Booking {
   cancelledAt      DateTime?
   cancelledBy      String?
   cancellationReason String?
+  googleCalendarEventId String? @unique
+  googleCalendarSyncedAt DateTime?
 
   changeRequests   BookingChangeRequest[]
   

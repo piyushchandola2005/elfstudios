@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { verifyHash, verifyPaymentWithPayU } from "@/lib/payu";
 import { sendBookingConfirmation } from "@/lib/mail";
+import { syncBookingToGoogleCalendar } from "@/lib/google-calendar";
 
 export async function POST(req: Request) {
   const envSiteUrl = process.env.SITE_URL ? (process.env.SITE_URL.startsWith('http') ? process.env.SITE_URL : `https://${process.env.SITE_URL}`) : null;
@@ -39,9 +40,14 @@ export async function POST(req: Request) {
           payuPaymentId: response.mihpayid || null,
         },
       });
-      if (updated.count && booking.user.email) {
+      if (updated.count) {
         const confirmed = await prisma.booking.findUnique({ where: { id: booking.id }, include: { user: true } });
-        if (confirmed) await sendBookingConfirmation(confirmed, booking.user.email);
+        if (confirmed) {
+          const effects: Promise<unknown>[] = [syncBookingToGoogleCalendar(confirmed)];
+          if (booking.user.email) effects.push(sendBookingConfirmation(confirmed, booking.user.email));
+          const results = await Promise.allSettled(effects);
+          results.filter((result) => result.status === "rejected").forEach((result) => console.error("Booking confirmation side effect failed:", result.reason));
+        }
       }
       return htmlRedirect(`${siteUrl}/booking/success?txnid=${encodeURIComponent(txnid)}`);
     }
@@ -63,4 +69,3 @@ export async function POST(req: Request) {
     );
   }
 }
-

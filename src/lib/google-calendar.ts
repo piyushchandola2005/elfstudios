@@ -1,0 +1,154 @@
+import { prisma } from "@/lib/prisma";
+import { sessionEnd, sessionStart } from "@/lib/booking-policy";
+
+const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
+const GOOGLE_CALENDAR_API = "https://www.googleapis.com/calendar/v3";
+const TIME_ZONE = "Asia/Kolkata";
+
+type CalendarBooking = {
+  id: string;
+  attendees: number;
+  date: Date;
+  slots: string[];
+  ticketNumber: string | null;
+  bandName: string | null;
+  totalAmount: number;
+  status: string;
+  paymentStatus: string;
+  googleCalendarEventId: string | null;
+  user: { name: string | null; email: string | null; phone: string | null };
+};
+
+type GoogleCalendarConfig = {
+  clientId: string;
+  clientSecret: string;
+  refreshToken: string;
+  calendarId: string;
+};
+
+function calendarConfig(): GoogleCalendarConfig | null {
+  const clientId = process.env.GOOGLE_CALENDAR_CLIENT_ID;
+  const clientSecret = process.env.GOOGLE_CALENDAR_CLIENT_SECRET;
+  const refreshToken = process.env.GOOGLE_CALENDAR_REFRESH_TOKEN;
+  if (!clientId || !clientSecret || !refreshToken) return null;
+
+  return {
+    clientId,
+    clientSecret,
+    refreshToken,
+    calendarId: process.env.GOOGLE_CALENDAR_ID || "primary",
+  };
+}
+
+export function isGoogleCalendarConfigured() {
+  return calendarConfig() !== null;
+}
+
+async function accessToken(config: GoogleCalendarConfig) {
+  const response = await fetch(GOOGLE_TOKEN_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      client_id: config.clientId,
+      client_secret: config.clientSecret,
+      refresh_token: config.refreshToken,
+      grant_type: "refresh_token",
+    }),
+    cache: "no-store",
+  });
+  const payload = await response.json() as { access_token?: string; error_description?: string };
+  if (!response.ok || !payload.access_token) {
+    throw new Error(payload.error_description || "Google Calendar authorization failed.");
+  }
+  return payload.access_token;
+}
+
+async function calendarRequest(path: string, init: RequestInit, config: GoogleCalendarConfig) {
+  const token = await accessToken(config);
+  const response = await fetch(`${GOOGLE_CALENDAR_API}${path}`, {
+    ...init,
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+      ...init.headers,
+    },
+    cache: "no-store",
+  });
+  if (!response.ok) {
+    const detail = await response.text();
+    throw new Error(`Google Calendar request failed (${response.status}): ${detail}`);
+  }
+  return response;
+}
+
+function eventPayload(booking: CalendarBooking) {
+  const customerName = booking.user.name || booking.bandName || "Studio booking";
+  const lines = [
+    `Ticket: ${booking.ticketNumber || booking.id}`,
+    `Customer: ${customerName}`,
+    booking.user.email ? `Email: ${booking.user.email}` : null,
+    booking.user.phone ? `Phone: ${booking.user.phone}` : null,
+    `Attendees: ${booking.attendees}`,
+    `Payment: ${booking.paymentStatus}`,
+    `Amount: ₹${booking.totalAmount.toLocaleString("en-IN")}`,
+    "Created by Elf Jampad Booking.",
+  ].filter(Boolean).join("\n");
+
+  return {
+    summary: `Elf Jampad — ${booking.bandName || customerName}`,
+    description: lines,
+    start: { dateTime: sessionStart(booking.date, booking.slots).toISOString(), timeZone: TIME_ZONE },
+    end: { dateTime: sessionEnd(booking.date, booking.slots).toISOString(), timeZone: TIME_ZONE },
+    extendedProperties: { private: { elfBookingId: booking.id, ticketNumber: booking.ticketNumber || "" } },
+  };
+}
+
+export async function syncBookingToGoogleCalendar(booking: CalendarBooking) {
+  const config = calendarConfig();
+  if (!config) return { synced: false, reason: "not-configured" as const };
+
+  const calendarId = encodeURIComponent(config.calendarId);
+  if (booking.status === "CANCELLED") {
+    if (!booking.googleCalendarEventId) return { synced: false, reason: "no-event" as const };
+    const response = await calendarRequest(
+      `/calendars/${calendarId}/events/${encodeURIComponent(booking.googleCalendarEventId)}?sendUpdates=none`,
+      { method: "DELETE" },
+      config,
+    );
+    if (response.status === 204) {
+      await prisma.booking.update({
+        where: { id: booking.id },
+        data: { googleCalendarEventId: null, googleCalendarSyncedAt: new Date() },
+      });
+    }
+    return { synced: true, action: "deleted" as const };
+  }
+
+  if (booking.status !== "CONFIRMED" || booking.paymentStatus !== "PAID") {
+    return { synced: false, reason: "not-confirmed" as const };
+  }
+
+  const payload = eventPayload(booking);
+  if (booking.googleCalendarEventId) {
+    await calendarRequest(
+      `/calendars/${calendarId}/events/${encodeURIComponent(booking.googleCalendarEventId)}?sendUpdates=none`,
+      { method: "PATCH", body: JSON.stringify(payload) },
+      config,
+    );
+    await prisma.booking.update({ where: { id: booking.id }, data: { googleCalendarSyncedAt: new Date() } });
+    return { synced: true, action: "updated" as const };
+  }
+
+  const response = await calendarRequest(
+    `/calendars/${calendarId}/events?sendUpdates=none`,
+    { method: "POST", body: JSON.stringify(payload) },
+    config,
+  );
+  const event = await response.json() as { id?: string };
+  if (!event.id) throw new Error("Google Calendar did not return an event ID.");
+  await prisma.booking.update({
+    where: { id: booking.id },
+    data: { googleCalendarEventId: event.id, googleCalendarSyncedAt: new Date() },
+  });
+  return { synced: true, action: "created" as const };
+}

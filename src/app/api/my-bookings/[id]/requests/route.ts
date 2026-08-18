@@ -8,6 +8,7 @@ import {
   validateSlots,
 } from "@/lib/booking-policy";
 import { sendBookingChangeNotification } from "@/lib/mail";
+import { syncBookingToGoogleCalendar } from "@/lib/google-calendar";
 
 export async function POST(req: Request, { params: paramsPromise }: { params: Promise<{ id: string }> }) {
   const params = await paramsPromise;
@@ -76,6 +77,7 @@ export async function POST(req: Request, { params: paramsPromise }: { params: Pr
     if (booking.user.email) {
       await sendBookingChangeNotification({ ...booking, ...updated }, booking.user.email, "RESCHEDULED").catch(console.error);
     }
+    await syncBookingToGoogleCalendar({ ...booking, ...updated }).catch((error) => console.error("Google Calendar reschedule sync failed:", error));
     return NextResponse.json({ booking: updated }, { status: 200 });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unable to submit request.";
