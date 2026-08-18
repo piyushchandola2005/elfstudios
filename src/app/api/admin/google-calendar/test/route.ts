@@ -11,6 +11,7 @@ export async function POST() {
     return NextResponse.json({ event });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unable to create the Calendar test event.";
+    console.error("Google Calendar test event failed:", message);
     return NextResponse.json({ error: message }, { status: 400 });
   }
 }
