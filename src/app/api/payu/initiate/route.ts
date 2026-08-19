@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { generateHash, PAYU_MERCHANT_KEY, PAYU_URL, assertPayUConfigured } from "@/lib/payu";
 import { randomBytes } from "crypto";
 import { requireApiUser } from "@/lib/auth";
-import { BOOKING_POLICY, calculatePrice, formatRupees, normalizeBookingDate, sessionStart, validateSlots } from "@/lib/booking-policy";
+import { BOOKING_POLICY, calculatePrice, normalizeBookingDate, sessionStart, validateSlots } from "@/lib/booking-policy";
 import { sendBookingConfirmation } from "@/lib/mail";
 
 export async function POST(req: Request) {
@@ -22,8 +22,9 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Please select a future time slot." }, { status: 400 });
     }
 
-    const price = calculatePrice(attendees, slots.length);
-    const totalAmount = 1; // formatRupees(price.totalPaise); - OVERRIDE FOR TESTING
+    calculatePrice(attendees, slots.length);
+    // Temporary live PayU test amount. Restore the calculated amount after testing.
+    const totalAmount = 1;
     const txnid = `ELF${Date.now()}${randomBytes(4).toString("hex").slice(0, 5)}`;
     const ticketNumber = `E-${randomBytes(4).toString("hex").toUpperCase()}`;
     const now = new Date();

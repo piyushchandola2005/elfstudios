@@ -14,15 +14,10 @@ export function Step1AttendeeCount({
   const [price, setPrice] = useState(0);
 
   useEffect(() => {
-    // Dynamic Pricing Logic:
-    // <= 5 people: ₹400/hr flat
-    // > 5 people: ₹100/hr * attendees
     if (attendees < 1) {
       setPrice(0);
-    } else if (attendees <= 6) {
-      setPrice(400);
     } else {
-      setPrice(700);
+      setPrice(1);
     }
   }, [attendees]);
 
@@ -36,7 +31,7 @@ export function Step1AttendeeCount({
           Who’s Jamming?
         </h3>
         <p className="font-sans text-[12px] text-white/40 font-light tracking-wide pt-1">
-          Enter the number of people attending the session. Pricing is calculated dynamically.
+          Enter the number of people attending the session.
         </p>
       </div>
 
@@ -63,13 +58,11 @@ export function Step1AttendeeCount({
           <p className="font-sans text-[11px] text-white/60 mt-1 font-light">
             {attendees < 1
               ? "Enter your group size to see the rate."
-              : attendees <= 6
-              ? "Flat rate for up to 6 members."
-              : "Flat rate for 7-10 members."}
+              : "Temporary test booking amount."}
           </p>
         </div>
         <div className="text-right">
-          <p className="font-display font-black text-3xl text-white drop-shadow-md">{price ? `₹${price}` : "—"}<span className="text-sm text-white/40 font-normal">/hr</span></p>
+          <p className="font-display font-black text-3xl text-white drop-shadow-md">{price ? `₹${price}` : "—"}</p>
         </div>
       </div>
 
