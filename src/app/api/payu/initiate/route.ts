@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { generateHash, PAYU_MERCHANT_KEY, PAYU_URL, assertPayUConfigured } from "@/lib/payu";
-import { randomBytes } from "crypto";
+import { randomBytes, randomInt } from "crypto";
 import { requireApiUser } from "@/lib/auth";
 import { BOOKING_POLICY, calculatePrice, normalizeBookingDate, sessionStart, validateSlots } from "@/lib/booking-policy";
 import { sendBookingConfirmation } from "@/lib/mail";
@@ -26,7 +26,12 @@ export async function POST(req: Request) {
     // Temporary live PayU test amount. Restore the calculated amount after testing.
     const totalAmount = 1;
     const txnid = `ELF${Date.now()}${randomBytes(4).toString("hex").slice(0, 5)}`;
-    const ticketNumber = `E-${randomBytes(4).toString("hex").toUpperCase()}`;
+    const ticketCharacters = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    const ticketCode = Array.from(
+      { length: 5 },
+      () => ticketCharacters[randomInt(ticketCharacters.length)],
+    ).join("");
+    const ticketNumber = `E-${ticketCode}`;
     const now = new Date();
     const expiresAt = new Date(now.getTime() + BOOKING_POLICY.pendingHoldMinutes * 60 * 1000);
     const phone = String(auth.user.user_metadata?.phone || "").trim().slice(0, 30) || null;
