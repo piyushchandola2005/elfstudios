@@ -96,6 +96,7 @@ function eventPayload(booking: CalendarBooking) {
     booking.user.email ? `Email: ${booking.user.email}` : null,
     booking.user.phone ? `Phone: ${booking.user.phone}` : null,
     `Attendees: ${booking.attendees}`,
+    booking.equipmentRequests ? `Requirements: ${booking.equipmentRequests}` : null,
     `Payment: ${booking.paymentStatus}`,
     `Amount: ₹${booking.totalAmount.toLocaleString("en-IN")}`,
     "Created by Elf Jampad Booking.",
