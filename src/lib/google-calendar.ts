@@ -102,7 +102,7 @@ function eventPayload(booking: CalendarBooking) {
   ].filter(Boolean).join("\n");
 
   return {
-    summary: `${booking.bandName || customerName} — ${booking.ticketNumber || booking.id}`,
+    summary: `Jampad — ${booking.bandName || customerName} — ${booking.ticketNumber || booking.id}`,
     description: lines,
     start: { dateTime: sessionStart(booking.date, booking.slots).toISOString(), timeZone: TIME_ZONE },
     end: { dateTime: sessionEnd(booking.date, booking.slots).toISOString(), timeZone: TIME_ZONE },
