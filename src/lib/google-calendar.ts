@@ -12,6 +12,7 @@ type CalendarBooking = {
   slots: string[];
   ticketNumber: string | null;
   bandName: string | null;
+  equipmentRequests: string | null;
   totalAmount: number;
   status: string;
   paymentStatus: string;
