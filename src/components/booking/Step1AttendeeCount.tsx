@@ -16,8 +16,10 @@ export function Step1AttendeeCount({
   useEffect(() => {
     if (attendees < 1) {
       setPrice(0);
+    } else if (attendees <= 6) {
+      setPrice(400);
     } else {
-      setPrice(1);
+      setPrice(700);
     }
   }, [attendees]);
 
@@ -31,7 +33,7 @@ export function Step1AttendeeCount({
           Who’s Jamming?
         </h3>
         <p className="font-sans text-[12px] text-white/40 font-light tracking-wide pt-1">
-          Enter the number of people attending the session.
+          Enter the number of people attending the session. Pricing is calculated dynamically.
         </p>
       </div>
 
@@ -58,11 +60,13 @@ export function Step1AttendeeCount({
           <p className="font-sans text-[11px] text-white/60 mt-1 font-light">
             {attendees < 1
               ? "Enter your group size to see the rate."
-              : "Temporary test booking amount."}
+              : attendees <= 6
+              ? "Flat rate for up to 6 members."
+              : "Flat rate for 7-10 members."}
           </p>
         </div>
         <div className="text-right">
-          <p className="font-display font-black text-3xl text-white drop-shadow-md">{price ? `₹${price}` : "—"}</p>
+          <p className="font-display font-black text-3xl text-white drop-shadow-md">{price ? `₹${price}` : "—"}<span className="text-sm text-white/40 font-normal">/hr</span></p>
         </div>
       </div>
 

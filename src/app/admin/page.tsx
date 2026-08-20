@@ -2,6 +2,8 @@ import React from "react";
 import { prisma } from "@/lib/prisma";
 import { Card } from "@/components/ui/Card";
 import { format } from "date-fns";
+import Link from "next/link";
+import { ArrowRight, CalendarDays, IndianRupee, Users } from "lucide-react";
 
 export const dynamic = 'force-dynamic';
 
@@ -41,38 +43,42 @@ export default async function AdminDashboard() {
   });
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-display font-black uppercase tracking-tighter">
-          Dashboard
-        </h1>
-        <p className="text-gray-500 font-sans mt-2">
-          Overview of Elf Jampad operations.
-        </p>
+    <div className="space-y-8 md:space-y-10">
+      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+        <div>
+          <p className="text-xs font-bold uppercase tracking-[0.2em] text-elf-orange">Elf Jampad</p>
+          <h1 className="mt-2 text-3xl font-black tracking-tight text-black sm:text-4xl">Operations overview</h1>
+          <p className="mt-2 text-sm text-gray-500">Bookings, customers and schedule in one place.</p>
+        </div>
+        <Link href="/admin/bookings" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-black px-4 text-sm font-bold text-white transition hover:bg-black/80">
+          Manage bookings <ArrowRight className="h-4 w-4" />
+        </Link>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="p-6 bg-white border border-gray-100 shadow-sm rounded-2xl">
-          <div className="text-sm font-mono text-gray-500 uppercase tracking-widest mb-2">Total Bands</div>
-          <div className="text-4xl font-display">{totalUsers}</div>
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <Card className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+          <div className="flex items-start justify-between"><div className="text-xs font-bold uppercase tracking-widest text-gray-500">Customers</div><Users className="h-5 w-5 text-gray-400" /></div>
+          <div className="mt-5 text-4xl font-black text-black">{totalUsers}</div>
         </Card>
         
-        <Card className="p-6 bg-white border border-gray-100 shadow-sm rounded-2xl">
-          <div className="text-sm font-mono text-gray-500 uppercase tracking-widest mb-2">Upcoming Sessions</div>
-          <div className="text-4xl font-display text-elf-orange">{upcomingBookingsCount}</div>
+        <Card className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+          <div className="flex items-start justify-between"><div className="text-xs font-bold uppercase tracking-widest text-gray-500">Upcoming sessions</div><CalendarDays className="h-5 w-5 text-elf-orange" /></div>
+          <div className="mt-5 text-4xl font-black text-elf-orange">{upcomingBookingsCount}</div>
         </Card>
         
-        <Card className="p-6 bg-white border border-gray-100 shadow-sm rounded-2xl">
-          <div className="text-sm font-mono text-gray-500 uppercase tracking-widest mb-2">Total Revenue</div>
-          <div className="text-4xl font-display">₹{totalRevenue.toLocaleString()}</div>
+        <Card className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+          <div className="flex items-start justify-between"><div className="text-xs font-bold uppercase tracking-widest text-gray-500">Confirmed revenue</div><IndianRupee className="h-5 w-5 text-gray-400" /></div>
+          <div className="mt-5 text-4xl font-black text-black">₹{totalRevenue.toLocaleString("en-IN")}</div>
         </Card>
       </div>
 
-      <div className="mt-12">
-        <h2 className="text-xl font-display font-bold uppercase mb-6">Up Next in the Pad</h2>
+      <section>
+        <div className="mb-5 flex items-center justify-between gap-4"><div><h2 className="text-xl font-black text-black">Upcoming sessions</h2><p className="mt-1 text-sm text-gray-500">Your next confirmed bookings.</p></div><Link href="/admin/calendar" className="text-sm font-bold text-black underline underline-offset-4">Schedule</Link></div>
         {upcomingBookings.length === 0 ? (
-          <div className="text-gray-500 font-sans p-8 border border-dashed border-gray-300 rounded-2xl text-center">
-            No upcoming confirmed bookings.
+          <div className="rounded-2xl border border-dashed border-gray-300 bg-white p-10 text-center">
+            <CalendarDays className="mx-auto h-7 w-7 text-gray-400" />
+            <h3 className="mt-4 font-bold text-black">Ready for the first booking</h3>
+            <p className="mt-1 text-sm text-gray-500">Confirmed sessions will appear here automatically.</p>
           </div>
         ) : (
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
@@ -120,7 +126,7 @@ export default async function AdminDashboard() {
             </table>
           </div>
         )}
-      </div>
+      </section>
     </div>
   );
 }

@@ -27,9 +27,10 @@ export function Step5Summary({
   onCancel 
 }: Step5Props) {
   const [loading, setLoading] = useState(false);
-  const discount = 0;
-  // Temporary live PayU test amount. Restore normal pricing after testing.
-  const total = 1;
+  const pricePerHour = attendees <= 6 ? 400 : 700;
+  const subtotal = pricePerHour * hours;
+  const discount = hours >= 10 ? Math.round(subtotal * 0.1) : 0;
+  const total = subtotal - discount;
 
   const handlePayment = async () => {
     setLoading(true);
@@ -143,7 +144,7 @@ export function Step5Summary({
             <span className="font-mono text-[11px] text-white/40 uppercase tracking-widest">Total (Advance)</span>
             <div className="text-right">
               <span className="font-display text-4xl text-white font-black drop-shadow-md">₹{total}</span>
-              <p className="font-mono text-[10px] text-white/40 mt-1 uppercase tracking-widest">Temporary test amount</p>
+              <p className="font-mono text-[10px] text-white/40 mt-1 uppercase tracking-widest">₹{pricePerHour}/hr × {hours} hrs</p>
             </div>
           </div>
           {discount > 0 && <p className="text-right font-mono text-[10px] uppercase tracking-widest text-green-400">10-hour discount: −₹{discount}</p>}

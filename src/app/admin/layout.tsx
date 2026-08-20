@@ -1,8 +1,10 @@
 import React from "react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
-import Link from "next/link";
 import Image from "next/image";
+import Link from "next/link";
+import { isAdminEmail } from "@/lib/auth";
+import { AdminNavigation } from "./AdminNavigation";
 
 export default async function AdminLayout({
   children,
@@ -17,63 +19,30 @@ export default async function AdminLayout({
     redirect("/login");
   }
 
-  const adminEmails = process.env.ADMIN_EMAILS?.split(",") || [];
-  if (!adminEmails.includes(user.email)) {
+  if (!isAdminEmail(user.email)) {
     redirect("/book"); // Not an admin
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col md:flex-row">
-      {/* Sidebar */}
-      <aside className="w-full md:w-64 bg-black text-white p-6 flex flex-col min-h-[100px] md:min-h-screen sticky top-0">
-        <div className="mb-8">
+    <div className="min-h-screen bg-[#f6f6f3] md:flex">
+      <aside className="sticky top-0 z-20 border-b border-white/10 bg-black p-4 text-white md:flex md:min-h-screen md:w-72 md:flex-col md:border-b-0 md:border-r md:p-6">
+        <div className="mb-5 flex items-center justify-between gap-4 md:mb-10 md:block">
           <Image 
             src="/assets/ELF JAMPAD white.png" 
             alt="Elf Jampad Logo" 
             width={120} 
             height={40} 
-            className="mb-4"
+            className="h-auto w-28 md:mb-4 md:w-32"
           />
-          <div className="text-[10px] font-mono tracking-widest uppercase text-elf-orange">
+          <div className="rounded-full border border-white/10 px-3 py-1 text-[10px] font-mono uppercase tracking-widest text-elf-orange md:inline-flex">
             Admin Portal
           </div>
         </div>
 
-        <nav className="flex md:flex-col gap-2 overflow-x-auto md:overflow-visible">
-          <Link 
-            href="/admin" 
-            className="px-4 py-3 text-sm font-sans rounded-xl hover:bg-white/10 transition-colors whitespace-nowrap"
-          >
-            Dashboard
-          </Link>
-          <Link 
-            href="/admin/bookings" 
-            className="px-4 py-3 text-sm font-sans rounded-xl hover:bg-white/10 transition-colors whitespace-nowrap"
-          >
-            Bookings
-          </Link>
-          <Link
-            href="/my-bookings"
-            className="px-4 py-3 text-sm font-sans rounded-xl hover:bg-white/10 transition-colors whitespace-nowrap"
-          >
-            Customer View
-          </Link>
-          <Link 
-            href="/admin/calendar" 
-            className="px-4 py-3 text-sm font-sans rounded-xl hover:bg-white/10 transition-colors whitespace-nowrap"
-          >
-            Calendar
-          </Link>
-          <Link 
-            href="/admin/users" 
-            className="px-4 py-3 text-sm font-sans rounded-xl hover:bg-white/10 transition-colors whitespace-nowrap"
-          >
-            Users
-          </Link>
-        </nav>
+        <AdminNavigation />
 
-        <div className="mt-auto hidden md:block pt-8 border-t border-white/10">
-          <div className="text-[10px] font-mono text-gray-400 mb-2 truncate">
+        <div className="mt-auto hidden border-t border-white/10 pt-8 md:block">
+          <div className="mb-2 truncate text-[10px] font-mono text-gray-400">
             {user.email}
           </div>
           <Link 
@@ -85,9 +54,8 @@ export default async function AdminLayout({
         </div>
       </aside>
 
-      {/* Main Content */}
-      <main className="flex-1 p-4 md:p-8 overflow-y-auto">
-        <div className="max-w-6xl mx-auto">
+      <main className="min-w-0 flex-1 p-4 sm:p-6 lg:p-10">
+        <div className="mx-auto max-w-7xl">
           {children}
         </div>
       </main>
