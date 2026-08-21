@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/Card";
 import { format } from "date-fns";
 import Link from "next/link";
 import { ArrowRight, CalendarDays, IndianRupee, Users } from "lucide-react";
+import { getAuthUserCount } from "@/lib/supabase-admin";
 
 export const dynamic = 'force-dynamic';
 
@@ -12,7 +13,7 @@ export default async function AdminDashboard() {
   today.setHours(0, 0, 0, 0);
 
   // Fetch some stats
-  const totalUsers = await prisma.user.count();
+  const totalUsers = await getAuthUserCount();
   
   const upcomingBookingsCount = await prisma.booking.count({
     where: {
